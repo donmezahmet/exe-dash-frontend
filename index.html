@@ -57,7 +57,9 @@
 
   <script>
     let statusChart;
-   fetch('https://exe-dash-backend.onrender.com/api/finding-status-by-year')
+    const backendURL = 'https://exe-dash-backend.onrender.com';
+
+    fetch(`${backendURL}/api/finding-status-by-year`)
       .then(res => res.json())
       .then(data => {
         const years = Object.keys(data)
@@ -65,38 +67,39 @@
           .sort()
           .concat(Object.keys(data).includes('Unknown') ? ['Unknown'] : []);
 
-        const completed = years.map(y => data[y].Completed || 0);
-        const open = years.map(y => data[y].Open || 0);
-        const overdue = years.map(y => data[y].Overdue || 0);
+        // Tüm statüleri dinamik olarak topla
+        const allStatusesSet = new Set();
+        years.forEach(year => {
+          Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
+        });
+        const allStatuses = Array.from(allStatusesSet);
+
+        // Her statü için ayrı renk belirleyelim (bazı örnek renkler)
+        const statusColors = {
+          'Completed': '#27ae60',
+          'Open': '#2980b9',
+          'In Progress': '#f39c12',
+          'To Do': '#8e44ad',
+          'Done': '#2ecc71',
+          'In Review': '#d35400',
+          'Waiting for Approval': '#7f8c8d',
+          'Reopened': '#16a085'
+        };
+
+        const datasets = allStatuses.map(status => ({
+          label: status,
+          data: years.map(year => data[year][status] || 0),
+          backgroundColor: statusColors[status] || '#34495e',
+          borderRadius: 6,
+          barThickness: 120
+        }));
 
         const ctx = document.getElementById('statusChart').getContext('2d');
         statusChart = new Chart(ctx, {
           type: 'bar',
           data: {
             labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
-            datasets: [
-              {
-                label: 'Completed',
-                data: completed,
-                backgroundColor: '#27ae60',
-                borderRadius: 6,
-                barThickness: 120
-              },
-              {
-                label: 'Open',
-                data: open,
-                backgroundColor: '#2980b9',
-                borderRadius: 6,
-                barThickness: 120
-              },
-              {
-                label: 'Overdue',
-                data: overdue,
-                backgroundColor: '#c0392b',
-                borderRadius: 6,
-                barThickness: 120
-              }
-            ]
+            datasets: datasets
           },
           options: {
             responsive: true,
@@ -149,23 +152,26 @@
                 const year = statusChart.data.labels[chart.index];
                 const status = statusChart.data.datasets[chart.datasetIndex].label;
 
-               const res = await fetch(`https://exe-dash-backend.onrender.com/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
-
+                const res = await fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
                 const issues = await res.json();
 
                 const html = `<strong>${status} Findings in ${year}:</strong><ul>` +
                   issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
 
                 const newWindow = window.open('', '_blank');
-                newWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>${status} Findings - ${year}</title>
-                      <style>body { font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; } strong { color: #2c3e50; }</style>
-                    </head>
-                    <body>${html}</body>
-                  </html>
-                `);
+                if (newWindow) {
+                  newWindow.document.write(`
+                    <html>
+                      <head>
+                        <title>${status} Findings - ${year}</title>
+                        <style>body { font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; } strong { color: #2c3e50; }</style>
+                      </head>
+                      <body>${html}</body>
+                    </html>
+                  `);
+                } else {
+                  alert("Pop-up engellendi. Lütfen tarayıcı ayarlarından izin verin.");
+                }
               }
             }
           },
