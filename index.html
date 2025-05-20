@@ -57,7 +57,7 @@
 
   <script>
     let statusChart;
-    fetch('http://localhost:3000/api/finding-status-by-year')
+   fetch('https://exe-dash-backend.onrender.com/api/finding-status-by-year')
       .then(res => res.json())
       .then(data => {
         const years = Object.keys(data)
@@ -149,7 +149,8 @@
                 const year = statusChart.data.labels[chart.index];
                 const status = statusChart.data.datasets[chart.datasetIndex].label;
 
-                const res = await fetch(`http://localhost:3000/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
+               const res = await fetch(`https://exe-dash-backend.onrender.com/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
+
                 const issues = await res.json();
 
                 const html = `<strong>${status} Findings in ${year}:</strong><ul>` +
