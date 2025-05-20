@@ -67,32 +67,57 @@
           .sort()
           .concat(Object.keys(data).includes('Unknown') ? ['Unknown'] : []);
 
-        // Tüm statüleri dinamik olarak topla
         const allStatusesSet = new Set();
         years.forEach(year => {
           Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
         });
+
         const allStatuses = Array.from(allStatusesSet);
 
-        // Her statü için ayrı renk belirleyelim (bazı örnek renkler)
-        const statusColors = {
-          'Completed': '#27ae60',
-          'Open': '#2980b9',
-          'In Progress': '#f39c12',
-          'To Do': '#8e44ad',
-          'Done': '#2ecc71',
-          'In Review': '#d35400',
-          'Waiting for Approval': '#7f8c8d',
-          'Reopened': '#16a085'
+        const predefinedColors = {
+          'OPEN': '#2980b9',
+          'COMPLETED': '#27ae60',
+          'CLOSED': '#e67e22',
+          'RISK ACCEPTED': '#8e44ad',
+          'REJECTED': '#c0392b',
+          'IN PROGRESS': '#16a085',
+          'DONE': '#2ecc71',
+          'TO DO': '#f1c40f'
         };
 
-        const datasets = allStatuses.map(status => ({
-          label: status,
-          data: years.map(year => data[year][status] || 0),
-          backgroundColor: statusColors[status] || '#34495e',
-          borderRadius: 6,
-          barThickness: 120
-        }));
+        const fallbackColors = [
+          '#d35400', '#2c3e50', '#9b59b6', '#1abc9c', '#e74c3c',
+          '#7f8c8d', '#34495e', '#f39c12', '#95a5a6'
+        ];
+
+        const statusColors = {};
+        let colorIndex = 0;
+
+        allStatuses.forEach(status => {
+          const normalized = status.toUpperCase();
+          if (predefinedColors[normalized]) {
+            statusColors[status] = predefinedColors[normalized];
+          } else {
+            statusColors[status] = fallbackColors[colorIndex % fallbackColors.length];
+            colorIndex++;
+          }
+        });
+
+        const minBarHeight = 3;
+
+        const datasets = allStatuses.map(status => {
+          const realData = years.map(year => data[year][status] || 0);
+          const visualData = realData.map(v => v === 0 ? 0 : Math.max(v, minBarHeight));
+
+          return {
+            label: status,
+            data: visualData,
+            realData,
+            backgroundColor: statusColors[status],
+            borderRadius: 6,
+            barThickness: 120
+          };
+        });
 
         const ctx = document.getElementById('statusChart').getContext('2d');
         statusChart = new Chart(ctx, {
@@ -121,11 +146,11 @@
                   weight: 'bold'
                 },
                 formatter: (value, ctx) => {
-                  const label = ctx.dataset.label;
-                  return value > 0 ? `${label} (${value})` : '';
+                  const real = ctx.dataset.realData?.[ctx.dataIndex];
+                  return real && real > 0 ? `${ctx.dataset.label} (${real})` : '';
                 },
-                anchor: ctx => ctx.dataset.data[ctx.dataIndex] < 5 ? 'end' : 'center',
-                align: ctx => ctx.dataset.data[ctx.dataIndex] < 5 ? 'start' : 'center',
+                anchor: 'center',
+                align: 'center',
                 clamp: true,
                 clip: false
               }
