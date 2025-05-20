@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audit Findings Executive Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fa;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 16px 40px;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 40px;
+      gap: 40px;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+      width: 100%;
+      max-width: 900px;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+  <header>Audit Findings Executive Dashboard</header>
+  <div class="container">
+    <div class="card">
+      <h2>Audit Findings by Year and Status</h2>
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let statusChart;
+    fetch('http://localhost:3000/api/finding-status-by-year')
+      .then(res => res.json())
+      .then(data => {
+        const years = Object.keys(data)
+          .filter(y => y !== 'Unknown')
+          .sort()
+          .concat(Object.keys(data).includes('Unknown') ? ['Unknown'] : []);
+
+        const completed = years.map(y => data[y].Completed || 0);
+        const open = years.map(y => data[y].Open || 0);
+        const overdue = years.map(y => data[y].Overdue || 0);
+
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        statusChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
+            datasets: [
+              {
+                label: 'Completed',
+                data: completed,
+                backgroundColor: '#27ae60',
+                borderRadius: 6,
+                barThickness: 120
+              },
+              {
+                label: 'Open',
+                data: open,
+                backgroundColor: '#2980b9',
+                borderRadius: 6,
+                barThickness: 120
+              },
+              {
+                label: 'Overdue',
+                data: overdue,
+                backgroundColor: '#c0392b',
+                borderRadius: 6,
+                barThickness: 120
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  font: {
+                    size: 14,
+                    family: 'Segoe UI'
+                  }
+                }
+              },
+              datalabels: {
+                color: '#fff',
+                font: {
+                  family: 'Segoe UI',
+                  size: 12,
+                  weight: 'bold'
+                },
+                formatter: (value, ctx) => {
+                  const label = ctx.dataset.label;
+                  return value > 0 ? `${label} (${value})` : '';
+                },
+                anchor: ctx => ctx.dataset.data[ctx.dataIndex] < 5 ? 'end' : 'center',
+                align: ctx => ctx.dataset.data[ctx.dataIndex] < 5 ? 'start' : 'center',
+                clamp: true,
+                clip: false
+              }
+            },
+            scales: {
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: {
+                  font: { size: 13 }
+                }
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: {
+                  font: { size: 13 }
+                }
+              }
+            },
+            onClick: async (evt, elements) => {
+              if (elements.length > 0) {
+                const chart = elements[0];
+                const year = statusChart.data.labels[chart.index];
+                const status = statusChart.data.datasets[chart.datasetIndex].label;
+
+                const res = await fetch(`http://localhost:3000/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
+                const issues = await res.json();
+
+                const html = `<strong>${status} Findings in ${year}:</strong><ul>` +
+                  issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
+
+                const newWindow = window.open('', '_blank');
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>${status} Findings - ${year}</title>
+                      <style>body { font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; } strong { color: #2c3e50; }</style>
+                    </head>
+                    <body>${html}</body>
+                  </html>
+                `);
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
+        });
+      });
+  </script>
+</body>
+</html>
