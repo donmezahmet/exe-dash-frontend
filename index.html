@@ -60,7 +60,6 @@
       width: 100%;
       font-size: 14px;
     }
-
     /* === Table Styles === */
     #controlRiskTableContainer table {
       width: 100%;
@@ -70,34 +69,65 @@
       font-family: 'Segoe UI', sans-serif;
       font-size: 14px;
     }
-
     #controlRiskTableContainer th, #controlRiskTableContainer td {
       padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid #2f3640;
     }
-
     #controlRiskTableContainer th {
       background-color: #2f3640;
       font-weight: 600;
       color: #dcdde1;
     }
-
     #controlRiskTableContainer td {
       color: #3498db;
     }
-
     #controlRiskTableContainer tr:last-child {
       font-weight: bold;
       background-color: #1e272e;
       border-top: 2px solid #57606f;
     }
+    /* === Popup Styles === */
+    #detailBox {
+      display: none;
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 999;
+      border-radius: 10px;
+    }
+    #detailBox button {
+      float: right;
+    }
+    #detailBox h3 {
+      margin-top: 0;
+    }
+    #detailBox ul {
+      padding-left: 20px;
+    }
+    #detailBox li {
+      margin-bottom: 6px;
+    }
   </style>
 </head>
 <body>
   <header>Audit Findings Executive Dashboard</header>
-  <div class="container">
 
+  <!-- Detay Kutusu -->
+  <div id="detailBox">
+    <button onclick="document.getElementById('detailBox').style.display='none'">Close</button>
+    <h3 id="detailTitle"></h3>
+    <ul id="detailList"></ul>
+  </div>
+
+  <div class="container">
     <!-- Bar Chart -->
     <div class="card">
       <h2>Audit Findings by Year and Status</h2>
@@ -122,7 +152,6 @@
       <h2>Two Dimensional Filter Statistics: All Audit Findings</h2>
       <div id="controlRiskTableContainer"></div>
     </div>
-
   </div>
 
   <script>
@@ -280,7 +309,12 @@
               html += '<tr>';
               html += `<td>${row.control}</td>`;
               riskLevels.forEach(level => {
-                html += `<td>${row[level] || 0}</td>`;
+                const count = row[level] || 0;
+                if (count > 0 && row.control !== 'Total Unique Issues:') {
+                  html += `<td style="cursor:pointer;text-decoration:underline;" onclick="showDetails('${row.control}', '${level}')">${count}</td>`;
+                } else {
+                  html += `<td>${count}</td>`;
+                }
               });
               html += `<td>${row.Total}</td>`;
               html += '</tr>';
@@ -288,13 +322,31 @@
 
             html += '</tbody></table>';
             container.innerHTML = html;
-          })
-          .catch(err => {
-            console.error('Failed to fetch control-risk data:', err);
-            document.getElementById('controlRiskTableContainer').innerHTML = '<p style="color:red;">Failed to load table data.</p>';
           });
-
       });
+
+    function showDetails(control, risk) {
+      const title = `${control} – ${risk} Risk Findings`;
+      document.getElementById('detailTitle').innerText = title;
+      document.getElementById('detailList').innerHTML = '<li>Loading...</li>';
+      document.getElementById('detailBox').style.display = 'block';
+
+      fetch(`${backendURL}/api/finding-details-by-control-and-risk?control=${encodeURIComponent(control)}&risk=${encodeURIComponent(risk)}`)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('detailList');
+          list.innerHTML = '';
+          if (data.length === 0) {
+            list.innerHTML = '<li>No findings found.</li>';
+          } else {
+            data.forEach(issue => {
+              const li = document.createElement('li');
+              li.innerHTML = `<a href="https://getir.atlassian.net/browse/${issue.key}" target="_blank">${issue.key}</a>: ${issue.summary}`;
+              list.appendChild(li);
+            });
+          }
+        });
+    }
   </script>
 </body>
 </html>
