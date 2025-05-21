@@ -118,6 +118,47 @@
   }
 
 
+   #typeRiskTableContainer {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  #typeRiskTableContainer table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background-color: #1c1f26;
+    color: #e0e6f0;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+  }
+
+  #typeRiskTableContainer th,
+  #typeRiskTableContainer td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #2f3640;
+    word-break: break-word;
+  }
+
+  #typeRiskTableContainer th {
+    background-color: #2f3640;
+    font-weight: 600;
+    color: #dcdde1;
+  }
+
+  #typeRiskTableContainer td {
+    color: #3498db;
+  }
+
+  #typeRiskTableContainer tr:last-child {
+    font-weight: bold;
+    background-color: #1e272e;
+    border-top: 2px solid #57606f;
+  }
+
+
+
     #detailBox {
       display: none;
       position: fixed;
@@ -175,15 +216,15 @@
         <div class="legend" id="statusLegend"></div>
       </div>
 
+     <div class="row">
       <div class="card">
-        <h2>Two Dimensional Filter Statistics: All Audit Findings</h2>
+        <h2>Two Dimensional Filter Statistics: Internal Control</h2>
         <div id="controlRiskTableContainer"></div>
       </div>
-    </div>
-    <div class="card">
-      <h2>Two Dimensional Filter Statistics: Risk Type × Risk Level</h2>
-      <div id="typeRiskTableContainer"></div>
-    </div>
+      <div class="card">
+        <h2>Two Dimensional Filter Statistics: Risk Type</h2>
+        <div id="typeRiskTableContainer"></div>
+      </div>
     </div>
 
     <!-- Metin Görünümü Alt Kart -->
