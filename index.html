@@ -21,31 +21,38 @@
     }
     .container {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 40px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
       gap: 40px;
+      padding: 40px;
     }
     .card {
       background: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-      width: 100%;
-      max-width: 900px;
+      flex: 1 1 600px;
+      max-width: 650px;
+      min-height: 460px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     h2 {
       margin-top: 0;
       font-size: 20px;
       font-weight: 600;
       color: #2c3e50;
+      align-self: flex-start;
     }
     canvas {
       width: 100% !important;
-      height: auto !important;
+      max-height: 360px !important;
     }
     .legend {
-      margin-top: 20px;
+      margin-top: 10px;
+      width: 100%;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -58,34 +65,16 @@
       <canvas id="statusChart"></canvas>
     </div>
 
-    <!-- Donut Chart: Status Distribution -->
+    <!-- Pie Chart: Status Distribution -->
     <div class="card">
       <h2>Audit Findings - Status Distribution</h2>
-      <canvas id="statusPie" width="300" height="300"></canvas>
+      <canvas id="statusPie"></canvas>
       <div class="legend" id="statusLegend"></div>
     </div>
   </div>
 
   <script>
     const backendURL = 'https://exe-dash-backend.onrender.com';
-
-    const predefinedColors = {
-      'OPEN': '#2980b9',
-      'COMPLETED': '#27ae60',
-      'CLOSED': '#e67e22',
-      'RISK ACCEPTED': '#8e44ad'
-    };
-
-    const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
-    const statusColors = {};
-    let colorIndex = 0;
-
-    function getColor(status) {
-      const normalized = status.toUpperCase();
-      if (statusColors[status]) return statusColors[status];
-      statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-      return statusColors[status];
-    }
 
     // === BAR CHART ===
     fetch(`${backendURL}/api/finding-status-by-year`)
@@ -102,6 +91,23 @@
         });
 
         const allStatuses = Array.from(allStatusesSet);
+
+        const predefinedColors = {
+          'OPEN': '#2980b9',
+          'COMPLETED': '#27ae60',
+          'CLOSED': '#e67e22',
+          'RISK ACCEPTED': '#8e44ad'
+        };
+
+        const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
+        const statusColors = {};
+        let colorIndex = 0;
+
+        allStatuses.forEach(status => {
+          const normalized = status.toUpperCase();
+          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+        });
+
         const minBarHeight = 3;
 
         const datasets = allStatuses.map(status => {
@@ -112,9 +118,11 @@
             label: status,
             data: visualData,
             realData,
-            backgroundColor: getColor(status),
+            backgroundColor: statusColors[status],
             borderRadius: 6,
-            barThickness: 120
+            barThickness: 80,
+            categoryPercentage: 0.7,
+            barPercentage: 0.8
           };
         });
 
@@ -132,22 +140,19 @@
                 position: 'top',
                 labels: { font: { size: 14, family: 'Segoe UI' } }
               },
-              datalabels: {
-                color: '#fff',
-                font: { family: 'Segoe UI', size: 12, weight: 'bold' },
-                formatter: (value, ctx) => {
-                  const real = ctx.dataset.realData?.[ctx.dataIndex];
-                  return real && real > 0 ? `${ctx.dataset.label} (${real})` : '';
-                },
-                anchor: 'center',
-                align: 'center',
-                clamp: true,
-                clip: false
-              }
+              datalabels: { display: false }
             },
             scales: {
-              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 13 } } },
-              y: { stacked: true, beginAtZero: true, ticks: { font: { size: 13 } } }
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 13 } }
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: { font: { size: 13 } }
+              }
             },
             onClick: async (evt, elements) => {
               if (elements.length > 0) {
@@ -176,45 +181,87 @@
           },
           plugins: [ChartDataLabels]
         });
-      });
 
-    // === PIE CHART ===
-    fetch(`${backendURL}/api/finding-status-distribution`)
-      .then(res => res.json())
-      .then(statusTotals => {
-        const pieLabels = Object.keys(statusTotals);
-        const pieValues = pieLabels.map(k => statusTotals[k]);
-        const pieColors = pieLabels.map(k => getColor(k));
-        const pieTotal = pieValues.reduce((a, b) => a + b, 0);
+        // === PIE CHART ===
+        fetch(`${backendURL}/api/finding-status-distribution`)
+          .then(res => res.json())
+          .then(statusData => {
+            const pieLabels = Object.keys(statusData);
+            const pieValues = pieLabels.map(k => statusData[k]);
+            const pieColors = pieLabels.map(k => statusColors[k] || '#bdc3c7');
+            const pieTotal = pieValues.reduce((a, b) => a + b, 0);
 
-        const pieCtx = document.getElementById('statusPie').getContext('2d');
-        new Chart(pieCtx, {
-          type: 'doughnut',
-          data: {
-            labels: pieLabels,
-            datasets: [{
-              data: pieValues,
-              backgroundColor: pieColors,
-              borderWidth: 2,
-              borderColor: '#f5f7fa'
-            }]
-          },
-          options: {
-            cutout: '65%',
-            plugins: { legend: { display: false } }
-          }
-        });
+            const pieCtx = document.getElementById('statusPie').getContext('2d');
+            new Chart(pieCtx, {
+              type: 'pie',
+              data: {
+                labels: pieLabels,
+                datasets: [{
+                  data: pieValues,
+                  backgroundColor: pieColors,
+                  borderWidth: 2,
+                  borderColor: '#f5f7fa'
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: { display: false },
+                  datalabels: {
+                    formatter: (value, ctx) => {
+                      const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                      const percentage = ((value / sum) * 100).toFixed(1) + '%';
+                      return percentage;
+                    },
+                    color: '#fff',
+                    font: {
+                      weight: 'bold',
+                      size: 14
+                    }
+                  }
+                },
+                onClick: async (evt, elements) => {
+                  if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const clickedStatus = pieLabels[index];
 
-        // Build custom legend
-        const legendEl = document.getElementById('statusLegend');
-        legendEl.innerHTML = `<strong>Total Issues:</strong> ${pieTotal}<br><br>`;
-        pieLabels.forEach((label, i) => {
-          legendEl.innerHTML += `
-            <div style="display:flex;align-items:center;margin-bottom:6px;">
-              <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
-              ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
-            </div>`;
-        });
+                    console.log("Pie clicked status:", clickedStatus); // Debug
+
+                    const res = await fetch(`${backendURL}/api/finding-details?year=all&status=${encodeURIComponent(clickedStatus)}`);
+                    const issues = await res.json();
+
+                    console.log("Returned issues:", issues); // Debug
+
+                    const html = `<strong>${clickedStatus} Findings:</strong><ul>` +
+                      issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
+
+                    const newWindow = window.open('', '_blank');
+                    if (newWindow) {
+                      newWindow.document.write(`
+                        <html>
+                          <head><title>${clickedStatus} Findings</title></head>
+                          <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body>
+                        </html>`);
+                    } else {
+                      alert("Pop-up engellendi. Lütfen izin verin.");
+                    }
+                  }
+                }
+              },
+              plugins: [ChartDataLabels]
+            });
+
+            const legendEl = document.getElementById('statusLegend');
+            legendEl.innerHTML = `<strong>Total Issues:</strong> ${pieTotal}<br><br>`;
+            pieLabels.forEach((label, i) => {
+              legendEl.innerHTML += `
+                <div style="display:flex;align-items:center;margin-bottom:6px;">
+                  <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
+                  ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
+                </div>`;
+            });
+          });
       });
   </script>
 </body>
