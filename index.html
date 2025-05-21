@@ -118,57 +118,6 @@
   }
 
 
-
-
-
-
-
-
-   #typeRiskTableContainer {
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  #typeRiskTableContainer table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    background-color: #1c1f26;
-    color: #e0e6f0;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 14px;
-  }
-
-  #typeRiskTableContainer th,
-  #typeRiskTableContainer td {
-    padding: 10px 12px;
-    text-align: center;
-    border-bottom: 1px solid #2f3640;
-    word-break: break-word;
-  }
-
-  #typeRiskTableContainer th {
-    background-color: #2f3640;
-    font-weight: 600;
-    color: #dcdde1;
-  }
-
-  #typeRiskTableContainer td {
-    color: #3498db;
-  }
-
-  #typeRiskTableContainer tr:last-child {
-    font-weight: bold;
-    background-color: #1e272e;
-    border-top: 2px solid #57606f;
-  }
-
-
-
-
-
-
-
     #detailBox {
       display: none;
       position: fixed;
@@ -455,6 +404,32 @@ fetch(`${backendURL}/api/statistics-by-type-and-risk`)
           }
         });
     }
+     function showDetailsByYearAndStatus(year, status) {
+  const title = `${status} Findings${year !== 'all' ? ' in ' + year : ''}`;
+  document.getElementById('detailTitle').innerText = title;
+  document.getElementById('detailList').innerHTML = '<li>Loading...</li>';
+  document.getElementById('detailBox').style.display = 'block';
+
+  fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${encodeURIComponent(status)}`)
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById('detailList');
+      list.innerHTML = '';
+      if (data.length === 0) {
+        list.innerHTML = '<li>No findings found.</li>';
+      } else {
+        data.forEach(issue => {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="https://getir.atlassian.net/browse/${issue.key}" target="_blank">${issue.key}</a>: ${issue.summary}`;
+          list.appendChild(li);
+        });
+      }
+    });
+}
+
+// ✅ Bu satırı EKLE:
+window.showDetailsByYearAndStatus = showDetailsByYearAndStatus;
+
   </script>
 </body>
 </html>
