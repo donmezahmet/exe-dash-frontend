@@ -49,6 +49,9 @@
       width: 100% !important;
       max-height: 360px !important;
     }
+    #riskBubbleChart {
+      max-height: 500px !important;
+    }
     .legend {
       margin-top: 10px;
       width: 100%;
@@ -59,17 +62,23 @@
 <body>
   <header>Audit Findings Executive Dashboard</header>
   <div class="container">
-    <!-- Bar Chart: Year by Status -->
+    <!-- Bar Chart -->
     <div class="card">
       <h2>Audit Findings by Year and Status</h2>
       <canvas id="statusChart"></canvas>
     </div>
 
-    <!-- Pie Chart: Status Distribution -->
+    <!-- Pie Chart -->
     <div class="card">
       <h2>Audit Findings - Status Distribution</h2>
       <canvas id="statusPie"></canvas>
       <div class="legend" id="statusLegend"></div>
+    </div>
+
+    <!-- Bubble Chart -->
+    <div class="card">
+      <h2>Project-Based Risk Scale</h2>
+      <canvas id="riskBubbleChart"></canvas>
     </div>
   </div>
 
@@ -91,14 +100,12 @@
         });
 
         const allStatuses = Array.from(allStatusesSet);
-
         const predefinedColors = {
           'OPEN': '#2980b9',
           'COMPLETED': '#27ae60',
           'CLOSED': '#e67e22',
           'RISK ACCEPTED': '#8e44ad'
         };
-
         const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
         const statusColors = {};
         let colorIndex = 0;
@@ -113,7 +120,6 @@
         const datasets = allStatuses.map(status => {
           const realData = years.map(year => data[year][status] || 0);
           const visualData = realData.map(v => v === 0 ? 0 : Math.max(v, minBarHeight));
-
           return {
             label: status,
             data: visualData,
@@ -143,36 +149,22 @@
               datalabels: { display: false }
             },
             scales: {
-              x: {
-                stacked: true,
-                grid: { display: false },
-                ticks: { font: { size: 13 } }
-              },
-              y: {
-                stacked: true,
-                beginAtZero: true,
-                ticks: { font: { size: 13 } }
-              }
+              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 13 } } },
+              y: { stacked: true, beginAtZero: true, ticks: { font: { size: 13 } } }
             },
             onClick: async (evt, elements) => {
               if (elements.length > 0) {
                 const chart = elements[0];
                 const year = years[chart.index] === 'Unknown' ? 'Not Assigned' : years[chart.index];
                 const status = datasets[chart.datasetIndex].label;
-
                 const res = await fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
                 const issues = await res.json();
-
                 const html = `<strong>${status} Findings in ${year}:</strong><ul>` +
                   issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
-
                 const newWindow = window.open('', '_blank');
                 if (newWindow) {
-                  newWindow.document.write(`
-                    <html>
-                      <head><title>${status} Findings - ${year}</title></head>
-                      <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body>
-                    </html>`);
+                  newWindow.document.write(`<html><head><title>${status} Findings - ${year}</title></head>
+                    <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body></html>`);
                 } else {
                   alert("Pop-up engellendi. Lütfen izin verin.");
                 }
@@ -211,38 +203,24 @@
                   datalabels: {
                     formatter: (value, ctx) => {
                       const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                      const percentage = ((value / sum) * 100).toFixed(1) + '%';
-                      return percentage;
+                      return ((value / sum) * 100).toFixed(1) + '%';
                     },
                     color: '#fff',
-                    font: {
-                      weight: 'bold',
-                      size: 14
-                    }
+                    font: { weight: 'bold', size: 14 }
                   }
                 },
                 onClick: async (evt, elements) => {
                   if (elements.length > 0) {
                     const index = elements[0].index;
                     const clickedStatus = pieLabels[index];
-
-                    console.log("Pie clicked status:", clickedStatus); // Debug
-
                     const res = await fetch(`${backendURL}/api/finding-details?year=all&status=${encodeURIComponent(clickedStatus)}`);
                     const issues = await res.json();
-
-                    console.log("Returned issues:", issues); // Debug
-
                     const html = `<strong>${clickedStatus} Findings:</strong><ul>` +
                       issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
-
                     const newWindow = window.open('', '_blank');
                     if (newWindow) {
-                      newWindow.document.write(`
-                        <html>
-                          <head><title>${clickedStatus} Findings</title></head>
-                          <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body>
-                        </html>`);
+                      newWindow.document.write(`<html><head><title>${clickedStatus} Findings</title></head>
+                        <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body></html>`);
                     } else {
                       alert("Pop-up engellendi. Lütfen izin verin.");
                     }
@@ -262,6 +240,61 @@
                 </div>`;
             });
           });
+
+        // === BUBBLE CHART ===
+        fetch(`${backendURL}/api/risk-scale-by-project`)
+          .then(res => res.json())
+          .then(data => {
+            const colors = {
+              'Critical': '#000000',
+              'High': '#e74c3c',
+              'Medium': '#f1c40f',
+              'Low': '#27ae60'
+            };
+
+            const datasets = [];
+
+            Object.entries(data).forEach(([project, risks]) => {
+              Object.entries(risks).forEach(([risk, count]) => {
+                datasets.push({
+                  label: `${project} - ${risk}`,
+                  data: [{ x: project, y: risk, r: count * 3 }],
+                  backgroundColor: colors[risk] || '#95a5a6'
+                });
+              });
+            });
+
+            const ctx = document.getElementById('riskBubbleChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'bubble',
+              data: { datasets },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: context => `${context.dataset.label}: ${context.raw.r / 3} findings`
+                    }
+                  }
+                },
+                scales: {
+                  x: {
+                    type: 'category',
+                    labels: Object.keys(data),
+                    title: { display: true, text: 'Projects' },
+                    ticks: { maxRotation: 90, minRotation: 45 }
+                  },
+                  y: {
+                    type: 'category',
+                    labels: ['Low', 'Medium', 'High', 'Critical'],
+                    title: { display: true, text: 'Risk Level' }
+                  }
+                }
+              }
+            });
+          });
+
       });
   </script>
 </body>
