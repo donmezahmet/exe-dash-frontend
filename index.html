@@ -44,21 +44,50 @@
       width: 100% !important;
       height: auto !important;
     }
+    .legend {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
   <header>Audit Findings Executive Dashboard</header>
   <div class="container">
+    <!-- Bar Chart: Year by Status -->
     <div class="card">
       <h2>Audit Findings by Year and Status</h2>
       <canvas id="statusChart"></canvas>
     </div>
+
+    <!-- Donut Chart: Status Distribution -->
+    <div class="card">
+      <h2>Audit Findings - Status Distribution</h2>
+      <canvas id="statusPie" width="300" height="300"></canvas>
+      <div class="legend" id="statusLegend"></div>
+    </div>
   </div>
 
   <script>
-    let statusChart;
     const backendURL = 'https://exe-dash-backend.onrender.com';
 
+    const predefinedColors = {
+      'OPEN': '#2980b9',
+      'COMPLETED': '#27ae60',
+      'CLOSED': '#e67e22',
+      'RISK ACCEPTED': '#8e44ad'
+    };
+
+    const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
+    const statusColors = {};
+    let colorIndex = 0;
+
+    function getColor(status) {
+      const normalized = status.toUpperCase();
+      if (statusColors[status]) return statusColors[status];
+      statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+      return statusColors[status];
+    }
+
+    // === BAR CHART ===
     fetch(`${backendURL}/api/finding-status-by-year`)
       .then(res => res.json())
       .then(data => {
@@ -73,36 +102,6 @@
         });
 
         const allStatuses = Array.from(allStatusesSet);
-
-        const predefinedColors = {
-          'OPEN': '#2980b9',
-          'COMPLETED': '#27ae60',
-          'CLOSED': '#e67e22',
-          'RISK ACCEPTED': '#8e44ad',
-          'REJECTED': '#c0392b',
-          'IN PROGRESS': '#16a085',
-          'DONE': '#2ecc71',
-          'TO DO': '#f1c40f'
-        };
-
-        const fallbackColors = [
-          '#d35400', '#2c3e50', '#9b59b6', '#1abc9c', '#e74c3c',
-          '#7f8c8d', '#34495e', '#f39c12', '#95a5a6'
-        ];
-
-        const statusColors = {};
-        let colorIndex = 0;
-
-        allStatuses.forEach(status => {
-          const normalized = status.toUpperCase();
-          if (predefinedColors[normalized]) {
-            statusColors[status] = predefinedColors[normalized];
-          } else {
-            statusColors[status] = fallbackColors[colorIndex % fallbackColors.length];
-            colorIndex++;
-          }
-        });
-
         const minBarHeight = 3;
 
         const datasets = allStatuses.map(status => {
@@ -113,14 +112,14 @@
             label: status,
             data: visualData,
             realData,
-            backgroundColor: statusColors[status],
+            backgroundColor: getColor(status),
             borderRadius: 6,
             barThickness: 120
           };
         });
 
         const ctx = document.getElementById('statusChart').getContext('2d');
-        statusChart = new Chart(ctx, {
+        new Chart(ctx, {
           type: 'bar',
           data: {
             labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
@@ -131,20 +130,11 @@
             plugins: {
               legend: {
                 position: 'top',
-                labels: {
-                  font: {
-                    size: 14,
-                    family: 'Segoe UI'
-                  }
-                }
+                labels: { font: { size: 14, family: 'Segoe UI' } }
               },
               datalabels: {
                 color: '#fff',
-                font: {
-                  family: 'Segoe UI',
-                  size: 12,
-                  weight: 'bold'
-                },
+                font: { family: 'Segoe UI', size: 12, weight: 'bold' },
                 formatter: (value, ctx) => {
                   const real = ctx.dataset.realData?.[ctx.dataIndex];
                   return real && real > 0 ? `${ctx.dataset.label} (${real})` : '';
@@ -156,26 +146,14 @@
               }
             },
             scales: {
-              x: {
-                stacked: true,
-                grid: { display: false },
-                ticks: {
-                  font: { size: 13 }
-                }
-              },
-              y: {
-                stacked: true,
-                beginAtZero: true,
-                ticks: {
-                  font: { size: 13 }
-                }
-              }
+              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 13 } } },
+              y: { stacked: true, beginAtZero: true, ticks: { font: { size: 13 } } }
             },
             onClick: async (evt, elements) => {
               if (elements.length > 0) {
                 const chart = elements[0];
-                const year = statusChart.data.labels[chart.index];
-                const status = statusChart.data.datasets[chart.datasetIndex].label;
+                const year = years[chart.index] === 'Unknown' ? 'Not Assigned' : years[chart.index];
+                const status = datasets[chart.datasetIndex].label;
 
                 const res = await fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
                 const issues = await res.json();
@@ -187,20 +165,55 @@
                 if (newWindow) {
                   newWindow.document.write(`
                     <html>
-                      <head>
-                        <title>${status} Findings - ${year}</title>
-                        <style>body { font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; } strong { color: #2c3e50; }</style>
-                      </head>
-                      <body>${html}</body>
-                    </html>
-                  `);
+                      <head><title>${status} Findings - ${year}</title></head>
+                      <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body>
+                    </html>`);
                 } else {
-                  alert("Pop-up engellendi. Lütfen tarayıcı ayarlarından izin verin.");
+                  alert("Pop-up engellendi. Lütfen izin verin.");
                 }
               }
             }
           },
           plugins: [ChartDataLabels]
+        });
+      });
+
+    // === PIE CHART ===
+    fetch(`${backendURL}/api/finding-status-distribution`)
+      .then(res => res.json())
+      .then(statusTotals => {
+        const pieLabels = Object.keys(statusTotals);
+        const pieValues = pieLabels.map(k => statusTotals[k]);
+        const pieColors = pieLabels.map(k => getColor(k));
+        const pieTotal = pieValues.reduce((a, b) => a + b, 0);
+
+        const pieCtx = document.getElementById('statusPie').getContext('2d');
+        new Chart(pieCtx, {
+          type: 'doughnut',
+          data: {
+            labels: pieLabels,
+            datasets: [{
+              data: pieValues,
+              backgroundColor: pieColors,
+              borderWidth: 2,
+              borderColor: '#f5f7fa'
+            }]
+          },
+          options: {
+            cutout: '65%',
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        // Build custom legend
+        const legendEl = document.getElementById('statusLegend');
+        legendEl.innerHTML = `<strong>Total Issues:</strong> ${pieTotal}<br><br>`;
+        pieLabels.forEach((label, i) => {
+          legendEl.innerHTML += `
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
+              <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
+              ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
+            </div>`;
         });
       });
   </script>
