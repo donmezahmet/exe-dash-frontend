@@ -36,14 +36,13 @@
       min-height: 460px;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
     }
     h2 {
       margin-top: 0;
       font-size: 20px;
       font-weight: 600;
       color: #2c3e50;
-      align-self: flex-start;
     }
     canvas {
       width: 100% !important;
@@ -51,6 +50,13 @@
     }
     #riskBubbleChart {
       max-height: 500px !important;
+    }
+    #riskTextChart {
+      width: 100%;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+      color: #2c3e50;
     }
     .legend {
       margin-top: 10px;
@@ -62,6 +68,7 @@
 <body>
   <header>Audit Findings Executive Dashboard</header>
   <div class="container">
+
     <!-- Bar Chart -->
     <div class="card">
       <h2>Audit Findings by Year and Status</h2>
@@ -80,6 +87,13 @@
       <h2>Project-Based Risk Scale</h2>
       <canvas id="riskBubbleChart"></canvas>
     </div>
+
+    <!-- Horizontal Text Chart -->
+    <div class="card">
+      <h2>Project-Based Risk Scale (Text View)</h2>
+      <pre id="riskTextChart"></pre>
+    </div>
+
   </div>
 
   <script>
@@ -89,10 +103,8 @@
     fetch(`${backendURL}/api/finding-status-by-year`)
       .then(res => res.json())
       .then(data => {
-        const years = Object.keys(data)
-          .filter(y => y !== 'Unknown')
-          .sort()
-          .concat(Object.keys(data).includes('Unknown') ? ['Unknown'] : []);
+        const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
+        if (Object.keys(data).includes('Unknown')) years.push('Unknown');
 
         const allStatusesSet = new Set();
         years.forEach(year => {
@@ -115,60 +127,31 @@
           statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
         });
 
-        const minBarHeight = 3;
-
         const datasets = allStatuses.map(status => {
-          const realData = years.map(year => data[year][status] || 0);
-          const visualData = realData.map(v => v === 0 ? 0 : Math.max(v, minBarHeight));
+          const dataPoints = years.map(year => data[year][status] || 0);
           return {
             label: status,
-            data: visualData,
-            realData,
+            data: dataPoints,
             backgroundColor: statusColors[status],
-            borderRadius: 6,
-            barThickness: 80,
-            categoryPercentage: 0.7,
-            barPercentage: 0.8
+            borderRadius: 6
           };
         });
 
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        new Chart(ctx, {
+        new Chart(document.getElementById('statusChart').getContext('2d'), {
           type: 'bar',
           data: {
             labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
-            datasets: datasets
+            datasets
           },
           options: {
             responsive: true,
             plugins: {
-              legend: {
-                position: 'top',
-                labels: { font: { size: 14, family: 'Segoe UI' } }
-              },
+              legend: { position: 'top' },
               datalabels: { display: false }
             },
             scales: {
-              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 13 } } },
-              y: { stacked: true, beginAtZero: true, ticks: { font: { size: 13 } } }
-            },
-            onClick: async (evt, elements) => {
-              if (elements.length > 0) {
-                const chart = elements[0];
-                const year = years[chart.index] === 'Unknown' ? 'Not Assigned' : years[chart.index];
-                const status = datasets[chart.datasetIndex].label;
-                const res = await fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${status}`);
-                const issues = await res.json();
-                const html = `<strong>${status} Findings in ${year}:</strong><ul>` +
-                  issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
-                const newWindow = window.open('', '_blank');
-                if (newWindow) {
-                  newWindow.document.write(`<html><head><title>${status} Findings - ${year}</title></head>
-                    <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body></html>`);
-                } else {
-                  alert("Pop-up engellendi. Lütfen izin verin.");
-                }
-              }
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true }
             }
           },
           plugins: [ChartDataLabels]
@@ -181,57 +164,38 @@
             const pieLabels = Object.keys(statusData);
             const pieValues = pieLabels.map(k => statusData[k]);
             const pieColors = pieLabels.map(k => statusColors[k] || '#bdc3c7');
-            const pieTotal = pieValues.reduce((a, b) => a + b, 0);
 
-            const pieCtx = document.getElementById('statusPie').getContext('2d');
-            new Chart(pieCtx, {
+            new Chart(document.getElementById('statusPie').getContext('2d'), {
               type: 'pie',
               data: {
                 labels: pieLabels,
                 datasets: [{
                   data: pieValues,
                   backgroundColor: pieColors,
-                  borderWidth: 2,
-                  borderColor: '#f5f7fa'
+                  borderColor: '#f5f7fa',
+                  borderWidth: 2
                 }]
               },
               options: {
                 responsive: true,
-                maintainAspectRatio: true,
                 plugins: {
                   legend: { display: false },
                   datalabels: {
                     formatter: (value, ctx) => {
-                      const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                      return ((value / sum) * 100).toFixed(1) + '%';
+                      const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                      return ((value / total) * 100).toFixed(1) + '%';
                     },
                     color: '#fff',
                     font: { weight: 'bold', size: 14 }
-                  }
-                },
-                onClick: async (evt, elements) => {
-                  if (elements.length > 0) {
-                    const index = elements[0].index;
-                    const clickedStatus = pieLabels[index];
-                    const res = await fetch(`${backendURL}/api/finding-details?year=all&status=${encodeURIComponent(clickedStatus)}`);
-                    const issues = await res.json();
-                    const html = `<strong>${clickedStatus} Findings:</strong><ul>` +
-                      issues.map(issue => `<li><strong>${issue.key}</strong>: ${issue.summary}</li>`).join('') + '</ul>';
-                    const newWindow = window.open('', '_blank');
-                    if (newWindow) {
-                      newWindow.document.write(`<html><head><title>${clickedStatus} Findings</title></head>
-                        <body style="font-family: 'Segoe UI'; padding: 20px;">${html}</body></html>`);
-                    } else {
-                      alert("Pop-up engellendi. Lütfen izin verin.");
-                    }
                   }
                 }
               },
               plugins: [ChartDataLabels]
             });
 
+            const total = pieValues.reduce((a, b) => a + b, 0);
             const legendEl = document.getElementById('statusLegend');
-            legendEl.innerHTML = `<strong>Total Issues:</strong> ${pieTotal}<br><br>`;
+            legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
             pieLabels.forEach((label, i) => {
               legendEl.innerHTML += `
                 <div style="display:flex;align-items:center;margin-bottom:6px;">
@@ -253,7 +217,6 @@
             };
 
             const datasets = [];
-
             Object.entries(data).forEach(([project, risks]) => {
               Object.entries(risks).forEach(([risk, count]) => {
                 datasets.push({
@@ -264,8 +227,7 @@
               });
             });
 
-            const ctx = document.getElementById('riskBubbleChart').getContext('2d');
-            new Chart(ctx, {
+            new Chart(document.getElementById('riskBubbleChart').getContext('2d'), {
               type: 'bubble',
               data: { datasets },
               options: {
@@ -295,6 +257,32 @@
             });
           });
 
+        // === HORIZONTAL TEXT RISK CHART ===
+        fetch(`${backendURL}/api/risk-scale-horizontal`)
+          .then(res => res.json())
+          .then(data => {
+            const symbols = {
+              'Critical': '█',
+              'High': '▓',
+              'Medium': '▒',
+              'Low': '░'
+            };
+            const order = ['Critical', 'High', 'Medium', 'Low'];
+            const lines = [];
+
+            Object.entries(data).forEach(([project, risks]) => {
+              let line = `${project}`;
+              order.forEach(risk => {
+                const count = risks[risk] || 0;
+                if (count > 0) {
+                  line += ` ├─${symbols[risk].repeat(count)} (${risk})`;
+                }
+              });
+              lines.push(line);
+            });
+
+            document.getElementById('riskTextChart').textContent = lines.join('\n');
+          });
       });
   </script>
 </body>
