@@ -48,49 +48,56 @@
       width: 100% !important;
       max-height: 360px !important;
     }
+    #riskTextChart {
+      width: 100%;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+      color: #2c3e50;
+    }
     .legend {
       margin-top: 10px;
       width: 100%;
       font-size: 14px;
     }
-    #riskTextChart {
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 13px;
-      color: #2c3e50;
-      margin-top: 10px;
-    }
-    table {
+
+    /* === Table Styles === */
+    #controlRiskTableContainer table {
       width: 100%;
       border-collapse: collapse;
+      background-color: #1c1f26;
+      color: #e0e6f0;
+      font-family: 'Segoe UI', sans-serif;
       font-size: 14px;
-      margin-top: 10px;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #ecf0f1;
-    }
-    td:first-child, th:first-child {
+
+    #controlRiskTableContainer th, #controlRiskTableContainer td {
+      padding: 10px 12px;
       text-align: left;
+      border-bottom: 1px solid #2f3640;
     }
-    tfoot td {
+
+    #controlRiskTableContainer th {
+      background-color: #2f3640;
+      font-weight: 600;
+      color: #dcdde1;
+    }
+
+    #controlRiskTableContainer td {
+      color: #3498db;
+    }
+
+    #controlRiskTableContainer tr:last-child {
       font-weight: bold;
-      background-color: #f0f0f0;
-    }
-    select {
-      margin-top: 10px;
-      padding: 5px 10px;
-      font-size: 14px;
+      background-color: #1e272e;
+      border-top: 2px solid #57606f;
     }
   </style>
 </head>
 <body>
   <header>Audit Findings Executive Dashboard</header>
   <div class="container">
+
     <!-- Bar Chart -->
     <div class="card">
       <h2>Audit Findings by Year and Status</h2>
@@ -104,7 +111,7 @@
       <div class="legend" id="statusLegend"></div>
     </div>
 
-    <!-- Risk Text Chart -->
+    <!-- Horizontal Text Chart -->
     <div class="card">
       <h2>Project-Based Risk Scale (Text View)</h2>
       <pre id="riskTextChart"></pre>
@@ -112,11 +119,10 @@
 
     <!-- Two Dimensional Table -->
     <div class="card">
-      <h2>Two Dimensional Filter Statistics</h2>
-      <label for="filter">Filter by Control Element:</label>
-      <select id="filter"></select>
-      <div id="twoDimTable"></div>
+      <h2>Two Dimensional Filter Statistics: All Audit Findings</h2>
+      <div id="controlRiskTableContainer"></div>
     </div>
+
   </div>
 
   <script>
@@ -130,131 +136,164 @@
         if (Object.keys(data).includes('Unknown')) years.push('Unknown');
 
         const allStatusesSet = new Set();
-        years.forEach(year => Object.keys(data[year]).forEach(status => allStatusesSet.add(status)));
+        years.forEach(year => {
+          Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
+        });
 
         const allStatuses = Array.from(allStatusesSet);
-        const statusColors = {
-          'OPEN': '#2980b9', 'COMPLETED': '#27ae60', 'CLOSED': '#e67e22', 'RISK ACCEPTED': '#8e44ad'
+        const predefinedColors = {
+          'OPEN': '#2980b9',
+          'COMPLETED': '#27ae60',
+          'CLOSED': '#e67e22',
+          'RISK ACCEPTED': '#8e44ad'
         };
+        const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
+        const statusColors = {};
+        let colorIndex = 0;
+
+        allStatuses.forEach(status => {
+          const normalized = status.toUpperCase();
+          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+        });
 
         const datasets = allStatuses.map(status => {
+          const dataPoints = years.map(year => data[year][status] || 0);
           return {
             label: status,
-            data: years.map(year => data[year][status] || 0),
-            backgroundColor: statusColors[status] || '#7f8c8d'
+            data: dataPoints,
+            backgroundColor: statusColors[status],
+            borderRadius: 6
           };
         });
 
         new Chart(document.getElementById('statusChart').getContext('2d'), {
-          type: 'bar', data: { labels: years, datasets },
-          options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true }, y: { stacked: true } } },
-          plugins: [ChartDataLabels]
-        });
-      });
-
-    // === PIE CHART ===
-    fetch(`${backendURL}/api/finding-status-distribution`)
-      .then(res => res.json())
-      .then(data => {
-        const labels = Object.keys(data);
-        const values = labels.map(l => data[l]);
-        const statusColors = { 'OPEN': '#2980b9', 'COMPLETED': '#27ae60', 'CLOSED': '#e67e22', 'RISK ACCEPTED': '#8e44ad' };
-        const colors = labels.map(l => statusColors[l] || '#95a5a6');
-
-        new Chart(document.getElementById('statusPie').getContext('2d'), {
-          type: 'pie',
-          data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+          type: 'bar',
+          data: {
+            labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
+            datasets
+          },
           options: {
             responsive: true,
             plugins: {
-              legend: { display: false },
-              datalabels: {
-                formatter: (value, ctx) => ((value / values.reduce((a, b) => a + b, 0)) * 100).toFixed(1) + '%',
-                color: '#fff', font: { weight: 'bold', size: 14 }
-              }
+              legend: { position: 'top' },
+              datalabels: { display: false }
+            },
+            scales: {
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true }
             }
           },
           plugins: [ChartDataLabels]
         });
 
-        const legendEl = document.getElementById('statusLegend');
-        legendEl.innerHTML = `<strong>Total Issues:</strong> ${values.reduce((a,b)=>a+b,0)}<br><br>`;
-        labels.forEach((l, i) => {
-          legendEl.innerHTML += `<div style="display:flex;align-items:center;margin-bottom:6px;">
-            <div style="width:14px;height:14px;background:${colors[i]};margin-right:10px;border-radius:3px;"></div>
-            ${l}: <strong style="margin-left:5px;">${values[i]}</strong></div>`;
-        });
-      });
+        // === PIE CHART ===
+        fetch(`${backendURL}/api/finding-status-distribution`)
+          .then(res => res.json())
+          .then(statusData => {
+            const pieLabels = Object.keys(statusData);
+            const pieValues = pieLabels.map(k => statusData[k]);
+            const pieColors = pieLabels.map(k => statusColors[k] || '#bdc3c7');
 
-    // === RISK TEXT CHART ===
-    fetch(`${backendURL}/api/risk-scale-horizontal`)
-      .then(res => res.json())
-      .then(data => {
-        const symbols = { 'Critical': '█', 'High': '▓', 'Medium': '▒', 'Low': '░' };
-        const order = ['Critical', 'High', 'Medium', 'Low'];
-        const lines = [];
-        Object.entries(data).forEach(([project, risks]) => {
-          let line = `${project}`;
-          order.forEach(r => {
-            if (risks[r]) line += ` ├─${symbols[r].repeat(risks[r])} (${r})`;
-          });
-          lines.push(line);
-        });
-        document.getElementById('riskTextChart').textContent = lines.join('\n');
-      });
+            new Chart(document.getElementById('statusPie').getContext('2d'), {
+              type: 'pie',
+              data: {
+                labels: pieLabels,
+                datasets: [{
+                  data: pieValues,
+                  backgroundColor: pieColors,
+                  borderColor: '#f5f7fa',
+                  borderWidth: 2
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  datalabels: {
+                    formatter: (value, ctx) => {
+                      const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                      return ((value / total) * 100).toFixed(1) + '%';
+                    },
+                    color: '#fff',
+                    font: { weight: 'bold', size: 14 }
+                  }
+                }
+              },
+              plugins: [ChartDataLabels]
+            });
 
-    // === TWO DIMENSIONAL TABLE ===
-    fetch(`${backendURL}/api/statistics-by-control-and-risk`)
-      .then(res => res.json())
-      .then(data => {
-        const allControls = data.map(d => d.control);
-        const select = document.getElementById('filter');
-        ['All', ...allControls.slice(0, -1)].forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c;
-          opt.textContent = c;
-          select.appendChild(opt);
-        });
-
-        const renderTable = (filtered) => {
-          const risks = ['Critical', 'High', 'Medium', 'Low'];
-          const table = document.createElement('table');
-          const thead = document.createElement('thead');
-          const tbody = document.createElement('tbody');
-          const tfoot = document.createElement('tfoot');
-
-          const header = `<tr><th>Internal Control Element</th>${risks.map(r => `<th>${r}</th>`).join('')}<th>Total</th></tr>`;
-          thead.innerHTML = header;
-
-          filtered.slice(0, -1).forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${row.control}</td>${risks.map(r => `<td>${row[r]}</td>`).join('')}<td>${row.Total}</td>`;
-            tbody.appendChild(tr);
+            const total = pieValues.reduce((a, b) => a + b, 0);
+            const legendEl = document.getElementById('statusLegend');
+            legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
+            pieLabels.forEach((label, i) => {
+              legendEl.innerHTML += `
+                <div style="display:flex;align-items:center;margin-bottom:6px;">
+                  <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
+                  ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
+                </div>`;
+            });
           });
 
-          const last = filtered.at(-1);
-          tfoot.innerHTML = `<tr><td>${last.control}</td>${risks.map(r => `<td>${last[r]}</td>`).join('')}<td>${last.Total}</td></tr>`;
+        // === HORIZONTAL TEXT RISK CHART ===
+        fetch(`${backendURL}/api/risk-scale-horizontal`)
+          .then(res => res.json())
+          .then(data => {
+            const symbols = {
+              'Critical': '█',
+              'High': '▓',
+              'Medium': '▒',
+              'Low': '░'
+            };
+            const order = ['Critical', 'High', 'Medium', 'Low'];
+            const lines = [];
 
-          table.appendChild(thead);
-          table.appendChild(tbody);
-          table.appendChild(tfoot);
+            Object.entries(data).forEach(([project, risks]) => {
+              let line = `${project}`;
+              order.forEach(risk => {
+                const count = risks[risk] || 0;
+                if (count > 0) {
+                  line += ` ├─${symbols[risk].repeat(count)} (${risk})`;
+                }
+              });
+              lines.push(line);
+            });
 
-          const wrapper = document.getElementById('twoDimTable');
-          wrapper.innerHTML = '';
-          wrapper.appendChild(table);
-        };
+            document.getElementById('riskTextChart').textContent = lines.join('\n');
+          });
 
-        renderTable(data);
+        // === TWO DIMENSIONAL TABLE ===
+        fetch(`${backendURL}/api/statistics-by-control-and-risk`)
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById('controlRiskTableContainer');
 
-        select.addEventListener('change', () => {
-          const val = select.value;
-          if (val === 'All') {
-            renderTable(data);
-          } else {
-            const filtered = data.filter(r => r.control === val || r.control.startsWith('Total'));
-            renderTable(filtered);
-          }
-        });
+            const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
+            const headers = ['Internal Control Element', ...riskLevels, 'T:'];
+
+            let html = '<table><thead><tr>';
+            headers.forEach(h => {
+              html += `<th>${h}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+              html += '<tr>';
+              html += `<td>${row.control}</td>`;
+              riskLevels.forEach(level => {
+                html += `<td>${row[level] || 0}</td>`;
+              });
+              html += `<td>${row.Total}</td>`;
+              html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+          })
+          .catch(err => {
+            console.error('Failed to fetch control-risk data:', err);
+            document.getElementById('controlRiskTableContainer').innerHTML = '<p style="color:red;">Failed to load table data.</p>';
+          });
+
       });
   </script>
 </body>
