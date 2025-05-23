@@ -431,8 +431,9 @@ function reloadBarChart() {
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
   loadAuditTypes();
-  loadActionPieChart(); // ✅ yeni pie chart'ı da yükle
+  reloadActionPieChart(); // ✅ sadece bunu çağırıyoruz artık
 };
+
 let pieChartInstance = null;
 
 function reloadPieChart() {
@@ -501,6 +502,71 @@ function reloadPieChart() {
           <div style="display:flex;align-items:center;margin-bottom:6px;">
             <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
             ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
+          </div>`;
+      });
+    });
+}
+
+function reloadActionPieChart() {
+  const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
+
+  let url = `${backendURL}/api/finding-action-status-distribution`;
+  const params = [];
+
+  if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
+  if (params.length > 0) url += '?' + params.join('&');
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      const backgroundColors = labels.map(label => {
+        const upper = label.toUpperCase();
+        if (upper === 'OVERDUE') return '#e74c3c'; // kırmızı
+        if (upper === 'DELAYED') return '#581845'; // koyu bordo
+        return predefinedColors[upper] || fallbackColors[colorIndex++ % fallbackColors.length];
+      });
+
+      if (actionPieChartInstance) actionPieChartInstance.destroy();
+
+      actionPieChartInstance = new Chart(document.getElementById('actionPie').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: backgroundColors,
+            borderColor: '#f5f7fa',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return ((value / total) * 100).toFixed(1) + '%';
+              },
+              color: '#fff',
+              font: { weight: 'bold', size: 14 }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      const total = values.reduce((a, b) => a + b, 0);
+      const legendEl = document.getElementById('actionLegend');
+      legendEl.innerHTML = `<strong>Total Actions:</strong> ${total}<br><br>`;
+      labels.forEach((label, i) => {
+        legendEl.innerHTML += `
+          <div style="display:flex;align-items:center;margin-bottom:6px;">
+            <div style="width:14px;height:14px;background:${backgroundColors[i]};margin-right:10px;border-radius:3px;"></div>
+            ${label}: <strong style="margin-left:5px;">${values[i]}</strong>
           </div>`;
       });
     });
