@@ -226,6 +226,10 @@ select[multiple] {
 <select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
   <option value="">All Types</option>
 </select>
+<label for="auditCountrySelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
+<select id="auditCountrySelect" onchange="reloadBarChart()" style="...">
+  <option value="">All Countries</option>
+</select>
 
 </div>
         <canvas id="statusChart"></canvas>
@@ -278,39 +282,60 @@ let colorIndex = 0;
 let barChartInstance = null;
 
 function loadAuditTypes() {
+  // Audit Type'ları getir
   fetch(`${backendURL}/api/audit-types`)
     .then(res => res.json())
     .then(types => {
-      // Bar chart filtresi
       const barSelect = document.getElementById('auditTypeSelect');
-      types.forEach(type => {
-        const option = document.createElement('option');
-        option.value = type;
-        option.textContent = type;
-        barSelect.appendChild(option);
-      });
-
-      // Pie chart filtresi
       const pieSelect = document.getElementById('auditTypeSelectPie');
+      barSelect.innerHTML = '<option value="">All Types</option>';
+      pieSelect.innerHTML = '<option value="">All Types</option>';
+
       types.forEach(type => {
-        const option = document.createElement('option');
-        option.value = type;
-        option.textContent = type;
-        pieSelect.appendChild(option);
+        const option1 = document.createElement('option');
+        option1.value = type;
+        option1.textContent = type;
+        barSelect.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = type;
+        option2.textContent = type;
+        pieSelect.appendChild(option2);
       });
 
-      // 🔄 Sayfa ilk yüklendiğinde her iki grafik de All Types olarak çizilsin
-      reloadBarChart();
-      reloadPieChart();
+      // Audit Country'leri getir
+      fetch(`${backendURL}/api/audit-countries`)
+        .then(res => res.json())
+        .then(countries => {
+          const countrySelect = document.getElementById('auditCountrySelect');
+          countrySelect.innerHTML = '<option value="">All Countries</option>';
+
+          countries.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countrySelect.appendChild(option);
+          });
+
+          // 🔄 Tüm dropdownlar dolunca barChart'ı başlat
+          reloadBarChart();
+          reloadPieChart();
+        });
     });
 }
 
 
+
 function reloadBarChart() {
   const selectedAuditType = document.getElementById('auditTypeSelect')?.value;
-  const url = selectedAuditType
-    ? `${backendURL}/api/finding-status-by-year?auditTypes=${encodeURIComponent(selectedAuditType)}`
-    : `${backendURL}/api/finding-status-by-year`;
+  const selectedAuditCountry = document.getElementById('auditCountrySelect')?.value;
+
+  // URL'yi oluştur
+  const params = new URLSearchParams();
+  if (selectedAuditType) params.append('auditTypes', selectedAuditType);
+  if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
+
+  const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
 
   fetch(url)
     .then(res => res.json())
@@ -366,6 +391,7 @@ function reloadBarChart() {
       barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
     });
 }
+
 
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
