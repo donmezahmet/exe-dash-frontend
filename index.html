@@ -257,13 +257,19 @@ select[multiple] {
   <h2>Finding Actions - Status Distribution</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-    
+
     <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
       <option value="">All Types</option>
     </select>
   </div>
   <canvas id="actionPie"></canvas>
   <div class="legend" id="actionLegend"></div>
+</div>
+
+<!-- ✅ Yeni chart burada başlıyor -->
+<div class="card">
+  <h2>Finding Actions by Lead and Status</h2>
+  <canvas id="leadStatusChart"></canvas>
 </div>
 
 <!-- ✅ Yeni chart burada bitti -->
@@ -432,8 +438,10 @@ function reloadBarChart() {
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
   loadAuditTypes();
-  reloadActionPieChart(); // ✅ sadece bunu çağırıyoruz artık
+  reloadActionPieChart();
+  loadLeadStatusChart(); // ✅ Finding Actions by Lead and Status chart'ı yükle
 };
+
 
 let pieChartInstance = null;
 
@@ -573,6 +581,59 @@ function reloadActionPieChart() {
     });
 }
 
+let leadStatusChartInstance = null;
+
+function loadLeadStatusChart() {
+  fetch(`${backendURL}/api/finding-action-status-by-lead`)
+    .then(res => res.json())
+    .then(data => {
+      const leads = Object.keys(data);
+      const statusesSet = new Set();
+
+      leads.forEach(lead => {
+        Object.keys(data[lead]).forEach(status => statusesSet.add(status));
+      });
+
+      const statuses = Array.from(statusesSet);
+      statuses.forEach(status => {
+        if (!statusColors[status]) {
+          statusColors[status] = predefinedColors[status.toUpperCase()] || fallbackColors[colorIndex++ % fallbackColors.length];
+        }
+      });
+
+      const datasets = statuses.map(status => {
+        return {
+          label: status,
+          data: leads.map(lead => data[lead][status] || 0),
+          backgroundColor: statusColors[status],
+          borderRadius: 6
+        };
+      });
+
+      const config = {
+        type: 'bar',
+        data: {
+          labels: leads,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        },
+        plugins: [ChartDataLabels]
+      };
+
+      if (leadStatusChartInstance) leadStatusChartInstance.destroy();
+      leadStatusChartInstance = new Chart(document.getElementById('leadStatusChart').getContext('2d'), config);
+    });
+}
 
 
         // Horizontal Text Chart
