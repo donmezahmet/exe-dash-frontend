@@ -254,6 +254,13 @@ select[multiple] {
   <script>
 const backendURL = 'https://exe-dash-backend.onrender.com';
   let chartInstance;
+  const statusColors = {
+  'OPEN': '#2980b9',
+  'COMPLETED': '#27ae60',
+  'CLOSED': '#e67e22',
+  'RISK ACCEPTED': '#8e44ad'
+};
+
 
   async function loadAuditTypes() {
     const res = await fetch(`${backendURL}/api/issues`);
