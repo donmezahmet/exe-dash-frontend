@@ -64,6 +64,20 @@
       max-height: 360px !important;
     }
 
+    .dropdown-multiselect {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+select[multiple] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+
     #riskTextChart {
       width: 100%;
       white-space: pre-wrap;
@@ -207,6 +221,12 @@
     <div class="row">
       <div class="card">
         <h2>Audit Findings by Year and Status</h2>
+        <div style="align-self: flex-end; margin-bottom: 10px;">
+  <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
+  <select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+    <option value="">All Types</option>
+  </select>
+</div>
         <canvas id="statusChart"></canvas>
       </div>
 
@@ -235,38 +255,31 @@
   </div>
 
   <script>
-      const backendURL = 'https://exe-dash-backend.onrender.com';
-    let chartInstance;
-
-    async function loadAuditTypes() {
-      const res = await fetch(`${backendURL}/api/issues`);
-      const data = await res.json();
-      const auditTypesSet = new Set();
-      data.issues.forEach(issue => {
-        const type = issue.fields.customfield_19767?.value;
-        if (type) auditTypesSet.add(type);
+    function loadAuditTypes() {
+  fetch(`${backendURL}/api/audit-types`) // Bu endpoint backend'de zaten var
+    .then(res => res.json())
+    .then(types => {
+      const select = document.getElementById('auditTypeSelect');
+      types.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        select.appendChild(option);
       });
+    });
+}
+    const backendURL = 'https://exe-dash-backend.onrender.com';
+   let barChartInstance = null;
 
-      const filter = document.getElementById('auditTypeFilter');
-      Array.from(auditTypesSet).sort().forEach(type => {
-        const opt = document.createElement('option');
-        opt.value = type;
-        opt.textContent = type;
-        filter.appendChild(opt);
-      });
-    }
+function reloadBarChart() {
+  const selectedAuditType = document.getElementById('auditTypeSelect')?.value;
+  const url = selectedAuditType
+    ? `${backendURL}/api/finding-status-by-year?auditTypes=${encodeURIComponent(selectedAuditType)}`
+    : `${backendURL}/api/finding-status-by-year`;
 
-    function getSelectedAuditTypes() {
-      const select = document.getElementById('auditTypeFilter');
-      return Array.from(select.selectedOptions).map(opt => opt.value);
-    }
-
-    async function loadChart() {
-      const selectedTypes = getSelectedAuditTypes();
-      const query = selectedTypes.length ? `?auditTypes=${selectedTypes.join(',')}` : '';
-      const res = await fetch(`${backendURL}/api/finding-status-by-year${query}`);
-      const data = await res.json();
-
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
       const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
       if (Object.keys(data).includes('Unknown')) years.push('Unknown');
 
@@ -301,9 +314,7 @@
         };
       });
 
-      if (chartInstance) chartInstance.destroy();
-      const ctx = document.getElementById('statusChart').getContext('2d');
-      chartInstance = new Chart(ctx, {
+      const config = {
         type: 'bar',
         data: {
           labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
@@ -321,13 +332,15 @@
           }
         },
         plugins: [ChartDataLabels]
-      });
-    }
+      };
 
- window.onload = async () => {
-  await loadAuditTypes();
-  document.getElementById('auditTypeFilter').addEventListener('change', loadChart);
-  await loadChart();
+      if (barChartInstance) barChartInstance.destroy();
+      barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
+    });
+}
+window.onload = () => {
+  loadAuditTypes();     // 🔽 Jira'dan audit type'ları al ve dropdown'a yerleştir
+  reloadBarChart();     // 📊 Bar chart'ı yükle
 };
 
 
@@ -435,7 +448,7 @@
             html += '</tbody></table>';
             container.innerHTML = html;
           });
-    
+  
 
 fetch(`${backendURL}/api/statistics-by-type-and-risk`)
     .then(res => res.json())
