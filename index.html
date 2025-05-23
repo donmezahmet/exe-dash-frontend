@@ -253,11 +253,18 @@ select[multiple] {
         <canvas id="statusPie"></canvas>
         <div class="legend" id="statusLegend"></div>
       </div>
-      <div class="card">
+  <div class="card">
   <h2>Finding Actions - Status Distribution</h2>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
+    <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Types</option>
+    </select>
+  </div>
   <canvas id="actionPie"></canvas>
   <div class="legend" id="actionLegend"></div>
 </div>
+
 <!-- ✅ Yeni chart burada bitti -->
 
      <div class="row">
@@ -294,14 +301,16 @@ let colorIndex = 0;
 let barChartInstance = null;
 
 function loadAuditTypes() {
-  // Audit Type'ları getir
   fetch(`${backendURL}/api/audit-types`)
     .then(res => res.json())
     .then(types => {
       const barSelect = document.getElementById('auditTypeSelect');
       const pieSelect = document.getElementById('auditTypeSelectPie');
+      const actionSelect = document.getElementById('auditTypeSelectActionPie');
+
       barSelect.innerHTML = '<option value="">All Types</option>';
       pieSelect.innerHTML = '<option value="">All Types</option>';
+      actionSelect.innerHTML = '<option value="">All Types</option>';
 
       types.forEach(type => {
         const option1 = document.createElement('option');
@@ -313,9 +322,13 @@ function loadAuditTypes() {
         option2.value = type;
         option2.textContent = type;
         pieSelect.appendChild(option2);
+
+        const option3 = document.createElement('option');
+        option3.value = type;
+        option3.textContent = type;
+        actionSelect.appendChild(option3);
       });
 
-      // Country'leri getir
       fetch(`${backendURL}/api/audit-countries`)
         .then(res => res.json())
         .then(countries => {
@@ -336,12 +349,14 @@ function loadAuditTypes() {
             pieCountrySelect.appendChild(option2);
           });
 
-          // Tüm dropdownlar dolunca grafikler çizilsin
+          // ✅ Grafikleri çiz
           reloadBarChart();
           reloadPieChart();
+          reloadActionPieChart(); // ← Bu önemli
         });
     });
 }
+
 
 
 
@@ -634,7 +649,15 @@ window.showDetailsByYearAndStatus = showDetailsByYearAndStatus;
 let actionPieChartInstance = null;
 
 function loadActionPieChart() {
-  fetch(`${backendURL}/api/finding-action-status-distribution`)
+  const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
+
+  let url = `${backendURL}/api/finding-action-status-distribution`;
+  const params = [];
+
+  if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
+  if (params.length > 0) url += '?' + params.join('&');
+
+  fetch(url)
     .then(res => res.json())
     .then(data => {
       const labels = Object.keys(data);
@@ -642,6 +665,8 @@ function loadActionPieChart() {
 
       const backgroundColors = labels.map(label => {
         const upper = label.toUpperCase();
+        if (upper === 'OVERDUE') return '#e74c3c'; // kırmızı
+        if (upper === 'DELAYED') return '#581845'; // koyu bordo
         return predefinedColors[upper] || fallbackColors[colorIndex++ % fallbackColors.length];
       });
 
@@ -687,6 +712,7 @@ function loadActionPieChart() {
       });
     });
 }
+
 
 
   </script>
