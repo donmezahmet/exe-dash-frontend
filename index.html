@@ -258,9 +258,9 @@ select[multiple] {
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
     <label for="auditActionOwnerSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Owner:</label>
-<select id="auditActionOwnerSelect" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-  <option value="">All Owners</option>
+<select id="auditActionOwnerSelect" multiple onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; min-width: 180px;">
 </select>
+
 
     <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
       <option value="">All Types</option>
@@ -528,13 +528,21 @@ function reloadPieChart() {
 
 function reloadActionPieChart() {
   const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
-  const selectedActionOwner = document.getElementById('auditActionOwnerSelect')?.value;
+
+  // Çoklu owner seçimini al
+  const ownerSelect = document.getElementById('auditActionOwnerSelect');
+  const selectedOwners = Array.from(ownerSelect.selectedOptions).map(opt => opt.value).filter(Boolean);
 
   let url = `${backendURL}/api/finding-action-status-distribution`;
   const params = [];
 
   if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
-  if (selectedActionOwner) params.push(`actionOwners=${encodeURIComponent(selectedActionOwner)}`);
+  if (selectedOwners.length > 0) {
+    selectedOwners.forEach(owner => {
+      params.push(`actionOwners=${encodeURIComponent(owner)}`);
+    });
+  }
+
   if (params.length > 0) url += '?' + params.join('&');
 
   fetch(url)
