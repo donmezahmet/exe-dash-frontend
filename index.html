@@ -416,8 +416,8 @@ function reloadBarChart() {
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
   loadAuditTypes();
+  loadActionPieChart(); // ✅ yeni pie chart'ı da yükle
 };
-
 let pieChartInstance = null;
 
 function reloadPieChart() {
@@ -631,6 +631,63 @@ fetch(`${backendURL}/api/statistics-by-type-and-risk`)
 
 // ✅ Bu satırı EKLE:
 window.showDetailsByYearAndStatus = showDetailsByYearAndStatus;
+let actionPieChartInstance = null;
+
+function loadActionPieChart() {
+  fetch(`${backendURL}/api/finding-action-status-distribution`)
+    .then(res => res.json())
+    .then(data => {
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      const backgroundColors = labels.map(label => {
+        const upper = label.toUpperCase();
+        return predefinedColors[upper] || fallbackColors[colorIndex++ % fallbackColors.length];
+      });
+
+      if (actionPieChartInstance) actionPieChartInstance.destroy();
+
+      actionPieChartInstance = new Chart(document.getElementById('actionPie').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: backgroundColors,
+            borderColor: '#f5f7fa',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return ((value / total) * 100).toFixed(1) + '%';
+              },
+              color: '#fff',
+              font: { weight: 'bold', size: 14 }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      const total = values.reduce((a, b) => a + b, 0);
+      const legendEl = document.getElementById('actionLegend');
+      legendEl.innerHTML = `<strong>Total Actions:</strong> ${total}<br><br>`;
+      labels.forEach((label, i) => {
+        legendEl.innerHTML += `
+          <div style="display:flex;align-items:center;margin-bottom:6px;">
+            <div style="width:14px;height:14px;background:${backgroundColors[i]};margin-right:10px;border-radius:3px;"></div>
+            ${label}: <strong style="margin-left:5px;">${values[i]}</strong>
+          </div>`;
+      });
+    });
+}
+
 
   </script>
 </body>
