@@ -257,6 +257,11 @@ select[multiple] {
   <h2>Finding Actions - Status Distribution</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
+    <label for="auditActionOwnerSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Owner:</label>
+<select id="auditActionOwnerSelect" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+  <option value="">All Owners</option>
+</select>
+
     <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
       <option value="">All Types</option>
     </select>
@@ -349,10 +354,24 @@ function loadAuditTypes() {
             pieCountrySelect.appendChild(option2);
           });
 
-          // ✅ Grafikleri çiz
-          reloadBarChart();
-          reloadPieChart();
-          reloadActionPieChart(); // ← Bu önemli
+          // ✅ Action Owner'ları da yükle
+          fetch(`${backendURL}/api/action-owners`)
+            .then(res => res.json())
+            .then(owners => {
+              const ownerSelect = document.getElementById('auditActionOwnerSelect');
+              ownerSelect.innerHTML = '<option value="">All Owners</option>';
+              owners.forEach(owner => {
+                const opt = document.createElement('option');
+                opt.value = owner;
+                opt.textContent = owner;
+                ownerSelect.appendChild(opt);
+              });
+
+              // ✅ Grafiklerin hepsini çiz
+              reloadBarChart();
+              reloadPieChart();
+              reloadActionPieChart();
+            });
         });
     });
 }
@@ -509,11 +528,13 @@ function reloadPieChart() {
 
 function reloadActionPieChart() {
   const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
+  const selectedActionOwner = document.getElementById('auditActionOwnerSelect')?.value;
 
   let url = `${backendURL}/api/finding-action-status-distribution`;
   const params = [];
 
   if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
+  if (selectedActionOwner) params.push(`actionOwners=${encodeURIComponent(selectedActionOwner)}`);
   if (params.length > 0) url += '?' + params.join('&');
 
   fetch(url)
@@ -524,8 +545,8 @@ function reloadActionPieChart() {
 
       const backgroundColors = labels.map(label => {
         const upper = label.toUpperCase();
-        if (upper === 'OVERDUE') return '#e74c3c'; // kırmızı
-        if (upper === 'DELAYED') return '#581845'; // koyu bordo
+        if (upper === 'OVERDUE') return '#e74c3c';
+        if (upper === 'DELAYED') return '#581845';
         return predefinedColors[upper] || fallbackColors[colorIndex++ % fallbackColors.length];
       });
 
@@ -571,6 +592,7 @@ function reloadActionPieChart() {
       });
     });
 }
+
 
 
 
