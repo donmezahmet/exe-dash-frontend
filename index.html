@@ -255,6 +255,17 @@ select[multiple] {
   </div>
 
   <script>
+    const predefinedColors = {
+  'OPEN': '#2980b9',
+  'COMPLETED': '#27ae60',
+  'CLOSED': '#e67e22',
+  'RISK ACCEPTED': '#8e44ad'
+};
+
+const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
+
+const statusColors = {};
+let colorIndex = 0;
     function loadAuditTypes() {
   fetch(`${backendURL}/api/audit-types`) // Bu endpoint backend'de zaten var
     .then(res => res.json())
@@ -289,20 +300,15 @@ function reloadBarChart() {
       });
 
       const allStatuses = Array.from(allStatusesSet);
-      const predefinedColors = {
-        'OPEN': '#2980b9',
-        'COMPLETED': '#27ae60',
-        'CLOSED': '#e67e22',
-        'RISK ACCEPTED': '#8e44ad'
-      };
-      const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
-      const statusColors = {};
-      let colorIndex = 0;
+  
 
-      allStatuses.forEach(status => {
-        const normalized = status.toUpperCase();
-        statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-      });
+    allStatuses.forEach(status => {
+  const normalized = status.toUpperCase();
+  if (!statusColors[status]) {
+    statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+  }
+});
+
 
       const datasets = allStatuses.map(status => {
         const dataPoints = years.map(year => data[year][status] || 0);
