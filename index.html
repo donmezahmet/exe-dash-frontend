@@ -227,7 +227,7 @@ select[multiple] {
   <option value="">All Types</option>
 </select>
 <label for="auditCountrySelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-<select id="auditCountrySelect" onchange="reloadBarChart()" style="...">
+<select id="auditCountrySelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
   <option value="">All Countries</option>
 </select>
 
@@ -236,13 +236,19 @@ select[multiple] {
       </div>
 
       <div class="card">
-        <h2>Audit Findings - Status Distribution</h2>
-        <div style="align-self: flex-end; margin-bottom: 10px;">
+   <h2>Audit Findings - Status Distribution</h2>
+<div style="align-self: flex-end; margin-bottom: 10px;">
   <label for="auditTypeSelectPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
   <select id="auditTypeSelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
     <option value="">All Types</option>
   </select>
+
+  <label for="auditCountrySelectPie" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
+  <select id="auditCountrySelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+    <option value="">All Countries</option>
+  </select>
 </div>
+
 
         <canvas id="statusPie"></canvas>
         <div class="legend" id="statusLegend"></div>
@@ -303,26 +309,34 @@ function loadAuditTypes() {
         pieSelect.appendChild(option2);
       });
 
-      // Audit Country'leri getir
+      // Country'leri getir
       fetch(`${backendURL}/api/audit-countries`)
         .then(res => res.json())
         .then(countries => {
-          const countrySelect = document.getElementById('auditCountrySelect');
-          countrySelect.innerHTML = '<option value="">All Countries</option>';
+          const barCountrySelect = document.getElementById('auditCountrySelect');
+          const pieCountrySelect = document.getElementById('auditCountrySelectPie');
+          barCountrySelect.innerHTML = '<option value="">All Countries</option>';
+          pieCountrySelect.innerHTML = '<option value="">All Countries</option>';
 
           countries.forEach(country => {
-            const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country;
-            countrySelect.appendChild(option);
+            const option1 = document.createElement('option');
+            option1.value = country;
+            option1.textContent = country;
+            barCountrySelect.appendChild(option1);
+
+            const option2 = document.createElement('option');
+            option2.value = country;
+            option2.textContent = country;
+            pieCountrySelect.appendChild(option2);
           });
 
-          // 🔄 Tüm dropdownlar dolunca barChart'ı başlat
+          // Tüm dropdownlar dolunca grafikler çizilsin
           reloadBarChart();
           reloadPieChart();
         });
     });
 }
+
 
 
 
@@ -402,9 +416,17 @@ let pieChartInstance = null;
 
 function reloadPieChart() {
   const selectedAuditType = document.getElementById('auditTypeSelectPie')?.value;
-  const url = selectedAuditType
-    ? `${backendURL}/api/finding-status-distribution?auditTypes=${encodeURIComponent(selectedAuditType)}`
-    : `${backendURL}/api/finding-status-distribution`;
+  const selectedCountry = document.getElementById('auditCountrySelectPie')?.value;
+
+  let url = `${backendURL}/api/finding-status-distribution`;
+  const params = [];
+
+  if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
+  if (selectedCountry) params.push(`auditCountries=${encodeURIComponent(selectedCountry)}`);
+
+  if (params.length > 0) {
+    url += '?' + params.join('&');
+  }
 
   const pieChartColors = {
     'OPEN': '#3498db',
@@ -420,10 +442,8 @@ function reloadPieChart() {
       const pieValues = pieLabels.map(k => statusData[k]);
       const pieColors = pieLabels.map(k => pieChartColors[k.toUpperCase()] || '#bdc3c7');
 
-      // Önceki pie chart varsa sil
       if (pieChartInstance) pieChartInstance.destroy();
 
-      // Yeni pie chart oluştur
       pieChartInstance = new Chart(document.getElementById('statusPie').getContext('2d'), {
         type: 'pie',
         data: {
@@ -452,7 +472,6 @@ function reloadPieChart() {
         plugins: [ChartDataLabels]
       });
 
-      // Legend'ı oluştur
       const total = pieValues.reduce((a, b) => a + b, 0);
       const legendEl = document.getElementById('statusLegend');
       legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
@@ -465,6 +484,7 @@ function reloadPieChart() {
       });
     });
 }
+
 
 
         // Horizontal Text Chart
