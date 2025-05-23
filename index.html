@@ -156,6 +156,18 @@
     background-color: #1e272e;
     border-top: 2px solid #57606f;
   }
+.dropdown-multiselect {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+select[multiple] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
 
 
 
@@ -207,6 +219,11 @@
     <div class="row">
       <div class="card">
         <h2>Audit Findings by Year and Status</h2>
+        <div class="dropdown-multiselect">
+  <label><strong>Filter by Audit Type:</strong></label>
+  <select id="auditTypeFilter" multiple></select>
+</div>
+
         <canvas id="statusChart"></canvas>
       </div>
 
@@ -235,64 +252,96 @@
   </div>
 
   <script>
-    const backendURL = 'https://exe-dash-backend.onrender.com';
+const backendURL = 'https://exe-dash-backend.onrender.com';
+  let chartInstance;
 
-    fetch(`${backendURL}/api/finding-status-by-year`)
-      .then(res => res.json())
-      .then(data => {
-        const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
-        if (Object.keys(data).includes('Unknown')) years.push('Unknown');
+  async function loadAuditTypes() {
+    const res = await fetch(`${backendURL}/api/issues`);
+    const data = await res.json();
+    const auditTypesSet = new Set();
+    data.issues.forEach(issue => {
+      const type = issue.fields.customfield_19767?.value;
+      if (type) auditTypesSet.add(type);
+    });
 
-        const allStatusesSet = new Set();
-        years.forEach(year => {
-          Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
-        });
+    const filter = document.getElementById('auditTypeFilter');
+    Array.from(auditTypesSet).sort().forEach(type => {
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = type;
+      filter.appendChild(opt);
+    });
+  }
 
-        const allStatuses = Array.from(allStatusesSet);
-        const predefinedColors = {
-          'OPEN': '#2980b9',
-          'COMPLETED': '#27ae60',
-          'CLOSED': '#e67e22',
-          'RISK ACCEPTED': '#8e44ad'
-        };
-        const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
-        const statusColors = {};
-        let colorIndex = 0;
+  function getSelectedAuditTypes() {
+    const select = document.getElementById('auditTypeFilter');
+    return Array.from(select.selectedOptions).map(opt => opt.value);
+  }
 
-        allStatuses.forEach(status => {
-          const normalized = status.toUpperCase();
-          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-        });
+  async function loadChart() {
+    const selectedTypes = getSelectedAuditTypes();
+    const query = selectedTypes.length ? `?auditTypes=${selectedTypes.join(',')}` : '';
+    const res = await fetch(`${backendURL}/api/finding-status-by-year${query}`);
+    const data = await res.json();
 
-        const datasets = allStatuses.map(status => {
-          const dataPoints = years.map(year => data[year][status] || 0);
-          return {
-            label: status,
-            data: dataPoints,
-            backgroundColor: statusColors[status],
-            borderRadius: 6
-          };
-        });
+    const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
+    if (Object.keys(data).includes('Unknown')) years.push('Unknown');
 
-        new Chart(document.getElementById('statusChart').getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
-            datasets
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              datalabels: { display: false }
-            },
-            scales: {
-              x: { stacked: true },
-              y: { stacked: true, beginAtZero: true }
-            }
-          },
-          plugins: [ChartDataLabels]
-        });
+    const allStatusesSet = new Set();
+    years.forEach(year => {
+      Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
+    });
+
+    const allStatuses = Array.from(allStatusesSet);
+    const statusColors = {
+      'OPEN': '#2980b9',
+      'COMPLETED': '#27ae60',
+      'CLOSED': '#e67e22',
+      'RISK ACCEPTED': '#8e44ad'
+    };
+
+    const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
+    let colorIndex = 0;
+
+    const datasets = allStatuses.map(status => {
+      const dataPoints = years.map(year => data[year][status] || 0);
+      return {
+        label: status,
+        data: dataPoints,
+        backgroundColor: statusColors[status] || fallbackColors[colorIndex++ % fallbackColors.length],
+        borderRadius: 6
+      };
+    });
+
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
+        datasets
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          datalabels: { display: false }
+        },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, beginAtZero: true }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  document.getElementById('auditTypeFilter').addEventListener('change', loadChart);
+
+  window.onload = async () => {
+    await loadAuditTypes();
+    await loadChart();
+  };
 
         // Pie chart
         fetch(`${backendURL}/api/finding-status-distribution`)
@@ -398,7 +447,7 @@
             html += '</tbody></table>';
             container.innerHTML = html;
           });
-      });
+      
 
 fetch(`${backendURL}/api/statistics-by-type-and-risk`)
     .then(res => res.json())
