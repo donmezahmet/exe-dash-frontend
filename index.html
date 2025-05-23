@@ -351,52 +351,58 @@ window.onload = () => {
 
 
         // Pie chart
+        const pieChartColors = {
+  'OPEN': '#3498db',
+  'COMPLETED': '#2ecc71',
+  'CLOSED': '#e67e22',
+  'RISK ACCEPTED': '#9b59b6'
+};
         fetch(`${backendURL}/api/finding-status-distribution`)
-          .then(res => res.json())
-          .then(statusData => {
-            const pieLabels = Object.keys(statusData);
-            const pieValues = pieLabels.map(k => statusData[k]);
-            const pieColors = pieLabels.map(k => statusColors[k] || '#bdc3c7');
+  .then(res => res.json())
+  .then(statusData => {
+    const pieLabels = Object.keys(statusData);
+    const pieValues = pieLabels.map(k => statusData[k]);
+    const pieColors = pieLabels.map(k => pieChartColors[k.toUpperCase()] || '#bdc3c7');
 
-            new Chart(document.getElementById('statusPie').getContext('2d'), {
-              type: 'pie',
-              data: {
-                labels: pieLabels,
-                datasets: [{
-                  data: pieValues,
-                  backgroundColor: pieColors,
-                  borderColor: '#f5f7fa',
-                  borderWidth: 2
-                }]
-              },
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: { display: false },
-                  datalabels: {
-                    formatter: (value, ctx) => {
-                      const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                      return ((value / total) * 100).toFixed(1) + '%';
-                    },
-                    color: '#fff',
-                    font: { weight: 'bold', size: 14 }
-                  }
-                }
-              },
-              plugins: [ChartDataLabels]
-            });
+    new Chart(document.getElementById('statusPie').getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: pieLabels,
+        datasets: [{
+          data: pieValues,
+          backgroundColor: pieColors,
+          borderColor: '#f5f7fa',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            formatter: (value, ctx) => {
+              const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+              return ((value / total) * 100).toFixed(1) + '%';
+            },
+            color: '#fff',
+            font: { weight: 'bold', size: 14 }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
 
-            const total = pieValues.reduce((a, b) => a + b, 0);
-            const legendEl = document.getElementById('statusLegend');
-            legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
-            pieLabels.forEach((label, i) => {
-              legendEl.innerHTML += `
-                <div style="display:flex;align-items:center;margin-bottom:6px;">
-                  <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
-                  ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
-                </div>`;
-            });
-          });
+    const total = pieValues.reduce((a, b) => a + b, 0);
+    const legendEl = document.getElementById('statusLegend');
+    legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
+    pieLabels.forEach((label, i) => {
+      legendEl.innerHTML += `
+        <div style="display:flex;align-items:center;margin-bottom:6px;">
+          <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
+          ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
+        </div>`;
+    });
+  });
 
         // Horizontal Text Chart
         fetch(`${backendURL}/api/risk-scale-horizontal`)
