@@ -222,10 +222,11 @@ select[multiple] {
       <div class="card">
         <h2>Audit Findings by Year and Status</h2>
         <div style="align-self: flex-end; margin-bottom: 10px;">
-  <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
-  <select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-    <option value="">All Types</option>
-  </select>
+ <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
+<select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+  <option value="">All Types</option>
+</select>
+
 </div>
         <canvas id="statusChart"></canvas>
       </div>
@@ -255,7 +256,9 @@ select[multiple] {
   </div>
 
   <script>
-    const predefinedColors = {
+ const backendURL = 'https://exe-dash-backend.onrender.com';
+
+const predefinedColors = {
   'OPEN': '#2980b9',
   'COMPLETED': '#27ae60',
   'CLOSED': '#e67e22',
@@ -263,11 +266,12 @@ select[multiple] {
 };
 
 const fallbackColors = ['#7f8c8d', '#34495e', '#f39c12', '#95a5a6'];
-
 const statusColors = {};
 let colorIndex = 0;
-    function loadAuditTypes() {
-  fetch(`${backendURL}/api/audit-types`) // Bu endpoint backend'de zaten var
+let barChartInstance = null;
+
+function loadAuditTypes() {
+  fetch(`${backendURL}/api/audit-types`)
     .then(res => res.json())
     .then(types => {
       const select = document.getElementById('auditTypeSelect');
@@ -277,10 +281,11 @@ let colorIndex = 0;
         option.textContent = type;
         select.appendChild(option);
       });
+
+      // 🔄 Dropdown dolduktan sonra chart'ı ilk kez çiz
+      reloadBarChart();
     });
 }
-    const backendURL = 'https://exe-dash-backend.onrender.com';
-   let barChartInstance = null;
 
 function reloadBarChart() {
   const selectedAuditType = document.getElementById('auditTypeSelect')?.value;
@@ -300,15 +305,13 @@ function reloadBarChart() {
       });
 
       const allStatuses = Array.from(allStatusesSet);
-  
 
-    allStatuses.forEach(status => {
-  const normalized = status.toUpperCase();
-  if (!statusColors[status]) {
-    statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-  }
-});
-
+      allStatuses.forEach(status => {
+        const normalized = status.toUpperCase();
+        if (!statusColors[status]) {
+          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+        }
+      });
 
       const datasets = allStatuses.map(status => {
         const dataPoints = years.map(year => data[year][status] || 0);
@@ -344,9 +347,10 @@ function reloadBarChart() {
       barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
     });
 }
+
+// Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
-  loadAuditTypes();     // 🔽 Jira'dan audit type'ları al ve dropdown'a yerleştir
-  reloadBarChart();     // 📊 Bar chart'ı yükle
+  loadAuditTypes();
 };
 
 
