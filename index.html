@@ -324,12 +324,12 @@
       });
     }
 
-    document.getElementById('auditTypeFilter').addEventListener('change', loadChart);
+ window.onload = async () => {
+  await loadAuditTypes();
+  document.getElementById('auditTypeFilter').addEventListener('change', loadChart);
+  await loadChart();
+};
 
-    window.onload = async () => {
-      await loadAuditTypes();
-      await loadChart();
-    };
 
         // Pie chart
         fetch(`${backendURL}/api/finding-status-distribution`)
