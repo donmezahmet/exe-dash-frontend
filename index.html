@@ -886,9 +886,9 @@ function loadAuditProgressChart() {
               display: true,
               formatter: (value, context) => statusLabels[context.dataIndex],
               color: '#fff',
+              font: { weight: 'bold' },
               anchor: 'center',
-              align: 'center',
-              font: { weight: 'bold' }
+              align: 'center'
             }
           },
           scales: {
@@ -911,6 +911,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
 
