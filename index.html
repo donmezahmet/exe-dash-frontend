@@ -853,47 +853,42 @@ function loadAuditProgressChart() {
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
     .then(data => {
-      const statuses = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
-      const statusColors = {
-        'Planned': '#7f8c8d',
-        'Fieldwork': '#2980b9',
-        'Reporting': '#8e44ad',
-        'Completed': '#27ae60'
-      };
-
       const labels = data.map(d => d.summary);
+      const values = data.map(d => d.progressLevel / 4); // Normalize to 0-1 for bar length
 
-      const datasets = statuses.map(status => ({
-        label: status,
-        data: data.map(d => d.progress[status]),
-        backgroundColor: statusColors[status],
-        borderSkipped: false,
-        borderRadius: 6,
-        barPercentage: 1.0,
-        categoryPercentage: 1.0
-      }));
-
-      new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
+      const chart = new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
         type: 'bar',
         data: {
           labels,
-          datasets
+          datasets: [{
+            label: 'Progress',
+            data: values,
+            backgroundColor: '#2ecc71',
+            borderRadius: 6,
+            borderSkipped: false
+          }]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           plugins: {
-            legend: { position: 'top' },
-            datalabels: { display: false }
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              formatter: value => `${Math.round(value * 100)}%`,
+              color: '#fff',
+              anchor: 'center',
+              align: 'center',
+              font: { weight: 'bold' }
+            }
           },
           scales: {
             x: {
-              stacked: true,
-              display: false,
-              max: 4
+              min: 0,
+              max: 1,
+              display: false
             },
             y: {
-              stacked: true,
               ticks: {
                 font: {
                   size: 13,
