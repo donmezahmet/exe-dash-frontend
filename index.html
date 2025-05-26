@@ -862,19 +862,16 @@ function loadAuditProgressChart() {
       };
 
       const labels = data.map(d => d.summary);
-      const statusValues = data.map(d => d.status);
 
-      const datasets = statuses.map(status => {
-        return {
-          label: status,
-          data: statusValues.map(s => (s === status ? 1 : 0)),
-          backgroundColor: statusColors[status],
-          borderSkipped: false,
-          borderRadius: 6,
-          barPercentage: 1.0,
-          categoryPercentage: 1.0
-        };
-      });
+      const datasets = statuses.map(status => ({
+        label: status,
+        data: data.map(d => d.progress[status]),
+        backgroundColor: statusColors[status],
+        borderSkipped: false,
+        borderRadius: 6,
+        barPercentage: 1.0,
+        categoryPercentage: 1.0
+      }));
 
       new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
         type: 'bar',
@@ -887,15 +884,13 @@ function loadAuditProgressChart() {
           responsive: true,
           plugins: {
             legend: { position: 'top' },
-            datalabels: {
-              display: false
-            }
+            datalabels: { display: false }
           },
           scales: {
             x: {
               stacked: true,
-              display: false, // X ekseni yok, çünkü % değil
-              max: 1
+              display: false,
+              max: 4
             },
             y: {
               stacked: true,
@@ -912,6 +907,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
 
