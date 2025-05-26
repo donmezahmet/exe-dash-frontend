@@ -849,6 +849,8 @@ function loadActionPieChart() {
     });
 }
 
+let auditProgressChartInstance = null;
+
 function loadAuditProgressChart() {
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
@@ -857,7 +859,13 @@ function loadAuditProgressChart() {
       const values = data.map(d => d.progressLevel / 4);
       const statusLabels = data.map(d => d.statusLabel);
 
-      const chart = new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
+      const ctx = document.getElementById('auditProgressChart').getContext('2d');
+
+      if (auditProgressChartInstance) {
+        auditProgressChartInstance.destroy();
+      }
+
+      auditProgressChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
@@ -903,6 +911,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
   </script>
