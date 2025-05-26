@@ -857,12 +857,13 @@ function loadAuditProgressChart() {
     .then(data => {
       const statuses = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
       const statusColor = '#2ecc71';
+      const emptyColor = '#ecf0f1';
 
       const datasets = statuses.map((status, idx) => {
         return {
           label: status,
-          data: data.map(d => d.progressLevel > idx ? 1 / 4 : 0),
-          backgroundColor: statusColor,
+          data: data.map(d => 1 / 4),
+          backgroundColor: data.map(d => d.progressLevel > idx ? statusColor : emptyColor),
           borderSkipped: false,
           borderRadius: 6
         };
@@ -881,17 +882,20 @@ function loadAuditProgressChart() {
           responsive: true,
           plugins: {
             legend: {
-              display: true,
+              display: false,
               position: 'top'
             },
             datalabels: {
               display: true,
-              color: '#fff',
+              color: data => {
+                const value = data.dataset.backgroundColor[data.dataIndex];
+                return value === statusColor ? '#fff' : '#000';
+              },
               font: { weight: 'bold' },
               formatter: (value, context) => {
                 const labelIndex = context.dataIndex;
                 const statusIndex = context.datasetIndex;
-                return data[labelIndex].progressLevel > statusIndex ? statuses[statusIndex] : '';
+                return statuses[statusIndex];
               }
             }
           },
@@ -904,6 +908,8 @@ function loadAuditProgressChart() {
             y: {
               stacked: true,
               ticks: {
+                align: 'start',
+                padding: 10,
                 font: {
                   size: 13,
                   weight: '500'
