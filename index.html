@@ -275,14 +275,10 @@ select[multiple] {
   <h2> Audit Plan - Progress Tracker</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Leads</option>
-    </select>
+    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;"></select>
 
     <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
-    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Years</option>
-    </select>
+    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;"></select>
   </div>
   <canvas id="auditProgressChart"></canvas>
 </div>
@@ -886,14 +882,36 @@ function loadAuditProgressChart() {
       const yearSelect = document.getElementById('auditYearSelect');
 
       leadSelect.innerHTML = '<option value="">All Leads</option>' +
-        sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+        sortedLeads.map(l => `<option value="${l}" ${l === selectedLead ? 'selected' : ''}>${l}</option>`).join('');
 
       yearSelect.innerHTML = '<option value="">All Years</option>' +
-        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+        sortedYears.map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('');
 
-      const labels = filteredData.map(d => d.summary);
-      const values = filteredData.map(d => d.progressLevel / 4);
-      const statusLabels = filteredData.map(d => d.statusLabel);
+      const allStages = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
+      const backgroundColors = {
+        'Planned': '#2ecc71',
+        'Fieldwork': '#2ecc71',
+        'Reporting': '#2ecc71',
+        'Completed': '#2ecc71'
+      };
+
+      const datasets = allStages.map((stage, idx) => {
+        return {
+          label: stage,
+          data: filteredData.map(d => d.progressLevel > idx ? 0.25 : 0),
+          backgroundColor: filteredData.map(d => d.progressLevel > idx ? backgroundColors[stage] : '#ecf0f1'),
+          datalabels: {
+            display: true,
+            formatter: (value, context) => allStages[idx],
+            color: filteredData.map(d => d.progressLevel > idx ? '#fff' : '#7f8c8d')[context.dataIndex],
+            font: { weight: 'bold' },
+            anchor: 'center',
+            align: 'center'
+          },
+          borderRadius: 6,
+          borderSkipped: false
+        };
+      });
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
       if (auditProgressChartInstance) {
@@ -903,28 +921,14 @@ function loadAuditProgressChart() {
       auditProgressChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels,
-          datasets: [{
-            label: 'Progress',
-            data: values,
-            backgroundColor: '#2ecc71',
-            borderRadius: 6,
-            borderSkipped: false
-          }]
+          labels: filteredData.map(d => d.summary),
+          datasets: datasets
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           plugins: {
-            legend: { display: false },
-            datalabels: {
-              display: true,
-              formatter: (value, context) => statusLabels[context.dataIndex],
-              color: '#fff',
-              anchor: 'center',
-              align: 'center',
-              font: { weight: 'bold' }
-            }
+            legend: { display: false }
           },
           scales: {
             x: { min: 0, max: 1, display: false },
@@ -935,6 +939,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
   </script>
 </body>
 </html>
