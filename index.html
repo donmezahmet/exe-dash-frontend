@@ -907,14 +907,13 @@ function loadAuditProgressChart() {
         backgroundColor: filteredData.map(d => d.progressLevel > idx ? backgroundColors[stage] : '#ecf0f1'),
         datalabels: {
           display: function(context) {
-            return true;
+            // ❗️Sadece son aşama olan "Completed" için göster
+            return context.dataset.label === 'Completed' && valueAt(context) > 0;
           },
           formatter: function(value, context) {
-            return allStages[idx];
+            return context.dataset.label;
           },
-          color: function(context) {
-            return valueAt(context) > 0 ? '#fff' : '#7f8c8d';
-          },
+          color: '#fff',
           font: { weight: 'bold' },
           anchor: 'center',
           align: 'center'
@@ -955,6 +954,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
   </script>
