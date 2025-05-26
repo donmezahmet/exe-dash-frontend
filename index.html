@@ -273,6 +273,17 @@ select[multiple] {
 </div>
 <div class="card">
   <h2> Audit Plan - Progress Tracker</h2>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Leads</option>
+    </select>
+
+    <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
+    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Years</option>
+    </select>
+  </div>
   <canvas id="auditProgressChart"></canvas>
 </div>
 
@@ -852,77 +863,78 @@ function loadActionPieChart() {
 let auditProgressChartInstance = null;
 
 function loadAuditProgressChart() {
+  const selectedLead = document.getElementById('auditLeadSelect')?.value;
+  const selectedYear = document.getElementById('auditYearSelect')?.value;
+
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
     .then(data => {
-      const statuses = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
-      const statusColor = '#2ecc71';
-      const emptyColor = '#ecf0f1';
+      const leads = new Set();
+      const years = new Set();
 
-      const datasets = statuses.map((status, idx) => {
-        return {
-          label: status,
-          data: data.map(d => 1 / 4),
-          backgroundColor: data.map(d => d.progressLevel > idx ? statusColor : emptyColor),
-          borderSkipped: false,
-          borderRadius: 6
-        };
+      const filteredData = data.filter(d => {
+        leads.add(d.auditLead);
+        years.add(d.auditYear);
+        return (!selectedLead || d.auditLead === selectedLead) &&
+               (!selectedYear || d.auditYear === selectedYear);
       });
 
-      const labels = data.map(d => d.summary);
+      const sortedLeads = Array.from(leads).sort();
+      const sortedYears = Array.from(years).sort();
 
-      const chart = new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
+      const leadSelect = document.getElementById('auditLeadSelect');
+      const yearSelect = document.getElementById('auditYearSelect');
+
+      leadSelect.innerHTML = '<option value="">All Leads</option>' +
+        sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+
+      yearSelect.innerHTML = '<option value="">All Years</option>' +
+        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+
+      const labels = filteredData.map(d => d.summary);
+      const values = filteredData.map(d => d.progressLevel / 4);
+      const statusLabels = filteredData.map(d => d.statusLabel);
+
+      const ctx = document.getElementById('auditProgressChart').getContext('2d');
+      if (auditProgressChartInstance) {
+        auditProgressChartInstance.destroy();
+      }
+
+      auditProgressChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
-          datasets
+          datasets: [{
+            label: 'Progress',
+            data: values,
+            backgroundColor: '#2ecc71',
+            borderRadius: 6,
+            borderSkipped: false
+          }]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           plugins: {
-            legend: {
-              display: false,
-              position: 'top'
-            },
+            legend: { display: false },
             datalabels: {
               display: true,
-              color: data => {
-                const value = data.dataset.backgroundColor[data.dataIndex];
-                return value === statusColor ? '#fff' : '#000';
-              },
-              font: { weight: 'bold' },
-              formatter: (value, context) => {
-                const labelIndex = context.dataIndex;
-                const statusIndex = context.datasetIndex;
-                return statuses[statusIndex];
-              }
+              formatter: (value, context) => statusLabels[context.dataIndex],
+              color: '#fff',
+              anchor: 'center',
+              align: 'center',
+              font: { weight: 'bold' }
             }
           },
           scales: {
-            x: {
-              stacked: true,
-              display: false,
-              max: 1
-            },
-            y: {
-              stacked: true,
-              ticks: {
-                align: 'start',
-                padding: 10,
-                font: {
-                  size: 13,
-                  weight: '500'
-                }
-              }
-            }
+            x: { min: 0, max: 1, display: false },
+            y: { ticks: { font: { size: 13, weight: '500' } } }
           }
         },
         plugins: [ChartDataLabels]
       });
     });
 }
-
   </script>
 </body>
 </html>
