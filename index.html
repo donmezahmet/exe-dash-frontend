@@ -271,6 +271,10 @@ select[multiple] {
   <h2>Finding Actions by Lead and Status</h2>
   <canvas id="leadStatusChart"></canvas>
 </div>
+<div class="card">
+  <h2>Yearly Audit Plan - Progress Tracker</h2>
+  <canvas id="auditProgressChart"></canvas>
+</div>
 
 <!-- ✅ Yeni chart burada bitti -->
 
@@ -283,6 +287,7 @@ select[multiple] {
         <h2>Two Dimensional Filter Statistics: Risk Type</h2>
         <div id="typeRiskTableContainer"></div>
       </div>
+
     </div>
 
     <!-- Metin Görünümü Alt Kart -->
@@ -438,8 +443,11 @@ function reloadBarChart() {
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
   loadAuditTypes();
+  reloadBarChart();
+  reloadPieChart();
   reloadActionPieChart();
-  loadLeadStatusChart(); // ✅ Finding Actions by Lead and Status chart'ı yükle
+  loadLeadStatusChart();
+  loadAuditProgressChart(); 
 };
 
 
@@ -841,6 +849,51 @@ function loadActionPieChart() {
     });
 }
 
+function loadAuditProgressChart() {
+  fetch(`${backendURL}/api/yearly-audit-plan`)
+    .then(res => res.json())
+    .then(data => {
+      const labels = data.map(item => item.summary);
+      const progressSteps = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
+      const colors = ['#95a5a6', '#2980b9', '#8e44ad', '#27ae60'];
+
+      const datasets = progressSteps.map((step, idx) => ({
+        label: step,
+        data: data.map(item => item.statusOrder > idx ? 1 : 0),
+        backgroundColor: colors[idx],
+        borderWidth: 0,
+        barThickness: 20,
+      }));
+
+      new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true,
+              ticks: { callback: v => `${v * 25}%` },
+              max: 4
+            },
+            y: { stacked: true }
+          },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.dataset.label
+              }
+            }
+          }
+        }
+      });
+    });
+}
 
 
   </script>
