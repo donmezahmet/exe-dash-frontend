@@ -895,36 +895,37 @@ function loadAuditProgressChart() {
 
       const allStages = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
       const backgroundColors = {
-        'Planned': '#2ecc71',
-        'Fieldwork': '#2ecc71',
-        'Reporting': '#2ecc71',
-        'Completed': '#2ecc71'
+        'Planned': '#27ae60',
+        'Fieldwork': '#27ae60',
+        'Reporting': '#27ae60',
+        'Completed': '#27ae60'
       };
+      const greyColor = '#ecf0f1';
 
-      const datasets = allStages.map((stage, idx) => ({
-        label: stage,
-        data: filteredData.map(d => d.progressLevel > idx ? 0.25 : 0),
-        backgroundColor: filteredData.map(d => d.progressLevel > idx ? backgroundColors[stage] : '#ecf0f1'),
-        datalabels: {
-          display: function(context) {
-            // ❗️Sadece son aşama olan "Completed" için göster
-            return context.dataset.label === 'Completed' && valueAt(context) > 0;
-          },
-          formatter: function(value, context) {
-            return context.dataset.label;
-          },
-          color: '#fff',
-          font: { weight: 'bold' },
-          anchor: 'center',
-          align: 'center'
-        },
-        borderRadius: 6,
-        borderSkipped: false
-      }));
-
-      function valueAt(context) {
-        return datasets[context.datasetIndex].data[context.dataIndex];
-      }
+      // Her aşama için ayrı dataset oluşturuluyor (1 audit için 4 segment = bar)
+const datasets = allStages.map((stage, idx) => ({
+  label: stage,
+  data: filteredData.map(d => 0.25), // her biri sabit uzunlukta olacak
+  backgroundColor: filteredData.map(d => d.progressLevel > idx ? backgroundColors[stage] : greyColor),
+  stack: 'same', // ❗️ Bu satır kritik – hepsi aynı satıra yığılacak
+datalabels: {
+  display: true,
+  formatter: function(value, context) {
+    return allStages[context.datasetIndex];
+  },
+  color: function(context) {
+    const bg = context.dataset.backgroundColor[context.dataIndex];
+    return bg === greyColor ? '#7f8c8d' : '#ffffff';
+  },
+  font: { weight: 'bold', size: 12 },
+  anchor: 'center',
+  align: 'center',
+  clamp: true
+}
+,
+  borderRadius: 6,
+  borderSkipped: false
+}));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
@@ -954,6 +955,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
 
