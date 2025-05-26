@@ -853,17 +853,32 @@ function loadAuditProgressChart() {
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
     .then(data => {
-      const labels = data.map(item => item.summary);
-      const progressSteps = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
-      const colors = ['#95a5a6', '#2980b9', '#8e44ad', '#27ae60'];
+      const statuses = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
+      const statusColors = {
+        'Planned': '#7f8c8d',
+        'Fieldwork': '#2980b9',
+        'Reporting': '#8e44ad',
+        'Completed': '#27ae60'
+      };
 
-      const datasets = progressSteps.map((step, idx) => ({
-        label: step,
-        data: data.map(item => item.statusOrder > idx ? 1 : 0),
-        backgroundColor: colors[idx],
-        borderWidth: 0,
-        barThickness: 20,
-      }));
+      const labels = data.map(d => d.summary);
+      const datasets = statuses.map(status => {
+        return {
+          label: status,
+          data: data.map(d => {
+            const s = d.status?.toLowerCase();
+            if (s === status.toLowerCase()) return 100;
+            const order = statuses.map(s => s.toLowerCase());
+            const idx = order.indexOf(s);
+            const threshold = order.indexOf(status.toLowerCase());
+            return idx >= threshold ? 100 : 0;
+          }),
+          backgroundColor: statusColors[status],
+          stack: 'progress',
+          borderSkipped: false,
+          borderRadius: 4
+        };
+      });
 
       new Chart(document.getElementById('auditProgressChart').getContext('2d'), {
         type: 'bar',
@@ -874,26 +889,26 @@ function loadAuditProgressChart() {
         options: {
           indexAxis: 'y',
           responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            datalabels: { display: false }
+          },
           scales: {
             x: {
               stacked: true,
-              ticks: { callback: v => `${v * 25}%` },
-              max: 4
+              max: 100,
+              ticks: {
+                callback: val => `${val}%`
+              }
             },
             y: { stacked: true }
-          },
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: {
-              callbacks: {
-                label: ctx => ctx.dataset.label
-              }
-            }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     });
 }
+
 
 
   </script>
