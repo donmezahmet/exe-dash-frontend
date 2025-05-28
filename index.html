@@ -390,8 +390,7 @@ function reloadBarChart() {
 
   // URL'yi oluştur
   const params = new URLSearchParams();
-  selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
-selectedAuditTypes.forEach(type => params.append('auditTypes', type));
+  selectedAuditTypes.forEach(type => params.append('auditTypes', type));
   if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
 
   const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
@@ -450,6 +449,7 @@ selectedAuditTypes.forEach(type => params.append('auditTypes', type));
       barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
     });
 }
+
 
 
 // Sayfa yüklendiğinde sadece dropdown'u yükle
