@@ -385,16 +385,16 @@ function loadAuditTypes() {
 
 
 function reloadBarChart() {
-  const selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
+  const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
+  const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
   const selectedAuditCountry = document.getElementById('auditCountrySelect')?.value;
 
-  // URL'yi oluştur
   const params = new URLSearchParams();
   selectedAuditTypes.forEach(type => params.append('auditTypes', type));
   if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
 
   const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
-
+  
   fetch(url)
     .then(res => res.json())
     .then(data => {
