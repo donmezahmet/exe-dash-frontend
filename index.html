@@ -390,7 +390,7 @@ function reloadBarChart() {
 
   // URL'yi oluştur
   const params = new URLSearchParams();
-  const selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
+  selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
 selectedAuditTypes.forEach(type => params.append('auditTypes', type));
   if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
 
