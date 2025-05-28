@@ -223,7 +223,7 @@ select[multiple] {
         <h2>Audit Findings by Year and Status</h2>
         <div style="align-self: flex-end; margin-bottom: 10px;">
  <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
-<select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+<select id="auditTypeSelect" multiple onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
   <option value="">All Types</option>
 </select>
 <label for="auditCountrySelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
@@ -385,12 +385,13 @@ function loadAuditTypes() {
 
 
 function reloadBarChart() {
-  const selectedAuditType = document.getElementById('auditTypeSelect')?.value;
+  const selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
   const selectedAuditCountry = document.getElementById('auditCountrySelect')?.value;
 
   // URL'yi oluştur
   const params = new URLSearchParams();
-  if (selectedAuditType) params.append('auditTypes', selectedAuditType);
+  const selectedAuditTypes = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []).map(opt => opt.value).filter(Boolean);
+selectedAuditTypes.forEach(type => params.append('auditTypes', type));
   if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
 
   const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
@@ -921,8 +922,7 @@ datalabels: {
   anchor: 'center',
   align: 'center',
   clamp: true
-}
-,
+},
   borderRadius: 6,
   borderSkipped: false
 }));
