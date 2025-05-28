@@ -455,8 +455,6 @@ function reloadBarChart() {
     });
 }
 
-
-
 // Sayfa yüklendiğinde sadece dropdown'u yükle
 window.onload = () => {
   loadAuditTypes();
@@ -465,13 +463,16 @@ window.onload = () => {
   reloadActionPieChart();
   loadLeadStatusChart();
   loadAuditProgressChart(); 
+
   new Choices('#auditTypeSelect', {
-  removeItemButton: true,
-  placeholder: true,
-  placeholderValue: 'Select Audit Types',
-  searchEnabled: true,
-  shouldSort: false
-});
+    removeItemButton: true,
+    placeholder: true,
+    placeholderValue: 'Select Audit Types',
+    searchEnabled: true,
+    shouldSort: false
+  });
+}; // ← window.onload fonksiyonunun doğru kapanışı
+
 
 
 let pieChartInstance = null;
