@@ -357,6 +357,17 @@ function loadAuditTypes() {
         actionSelect.appendChild(option3);
       });
 
+      // ✅ Choices burada başlatılmalı
+      const auditTypeSelectEl = document.getElementById('auditTypeSelect');
+      new Choices(auditTypeSelectEl, {
+        removeItemButton: true,
+        placeholder: true,
+        placeholderValue: 'Select Audit Types',
+        searchEnabled: true,
+        shouldSort: false
+      });
+
+      // 🔽 Countries çekimi ayrı fetch içinde kalsın
       fetch(`${backendURL}/api/audit-countries`)
         .then(res => res.json())
         .then(countries => {
@@ -380,7 +391,7 @@ function loadAuditTypes() {
           // ✅ Grafikleri çiz
           reloadBarChart();
           reloadPieChart();
-          reloadActionPieChart(); // ← Bu önemli
+          reloadActionPieChart();
         });
     });
 }
@@ -464,13 +475,6 @@ window.onload = () => {
   loadLeadStatusChart();
   loadAuditProgressChart(); 
 
-  new Choices('#auditTypeSelect', {
-    removeItemButton: true,
-    placeholder: true,
-    placeholderValue: 'Select Audit Types',
-    searchEnabled: true,
-    shouldSort: false
-  });
 }; // ← window.onload fonksiyonunun doğru kapanışı
 
 
