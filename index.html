@@ -83,9 +83,21 @@ select[multiple] {
   font-size: 14px;
 }
 
-.choices__list--dropdown {
-  max-height: 250px !important;
-  overflow-y: auto !important;
+.choices__list--multiple {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 4px 0;
+  margin: 0;
+  width: 100%;
+}
+
+
+
+.choices[data-type*="select-multiple"] .choices__list--dropdown {
+  width: auto !important;
+  min-width: 300px !important;
 }
 .choices__item .choices__button {
   margin-left: 8px;
@@ -98,20 +110,22 @@ select[multiple] {
   color: #fff;
   border-radius: 20px;
   padding: 5px 10px;
-  margin: 4px 6px 4px 0;
+  margin: 0 6px 0 0; /* üstten boşluk kaldırıldı */
   font-size: 13px;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap; /* ✅ Taşmayı engeller */
 }
 
+
+
 .choices__inner {
-  min-height: 42px !important;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  box-shadow: none;
+  max-height: 44px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
 }
 
     #riskTextChart {
@@ -206,6 +220,31 @@ select[multiple] {
     background-color: #1e272e;
     border-top: 2px solid #57606f;
   }
+  .filter-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.filter-group .choices {
+  width: 100%;
+  max-width: 300px;
+}
+
+
 
 
 
@@ -256,19 +295,22 @@ select[multiple] {
     <!-- Üçlü Kart Satırı -->
     <div class="row">
       <div class="card">
-        <h2>Audit Findings by Year and Status</h2>
-        <div style="align-self: flex-end; margin-bottom: 10px;">
- <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Audit Type:</label>
-<select id="auditTypeSelect" multiple onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-  <option value="">All Types</option>
-</select>
-<label for="auditCountrySelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-<select id="auditCountrySelect" multiple onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-  <option value="">All Countries</option>
-</select>
-
+<h2>Audit Findings by Year and Status</h2>
+<div class="filter-row">
+  <div class="filter-group">
+    <label for="auditTypeSelect">Audit Type:</label>
+    <select id="auditTypeSelect" multiple onchange="reloadBarChart()">
+      <option value="">All Types</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="auditCountrySelect">Country:</label>
+    <select id="auditCountrySelect" multiple onchange="reloadBarChart()">
+      <option value="">All Countries</option>
+    </select>
+  </div>
 </div>
-        <canvas id="statusChart"></canvas>
+<canvas id="statusChart"></canvas>
       </div>
 
       <div class="card">
