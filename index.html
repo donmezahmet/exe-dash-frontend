@@ -75,13 +75,44 @@
 }
 
 select[multiple] {
-  width: 100%;
+  width: 70%;
+  max-height: 42px;
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
 }
 
+.choices__list--dropdown {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+}
+.choices__item .choices__button {
+  margin-left: 8px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+}
+.choices__list--multiple .choices__item {
+  background-color: #007b8a;
+  color: #fff;
+  border-radius: 20px;
+  padding: 5px 10px;
+  margin: 4px 6px 4px 0;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.choices__inner {
+  min-height: 42px !important;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  box-shadow: none;
+}
 
     #riskTextChart {
       width: 100%;
@@ -227,12 +258,12 @@ select[multiple] {
       <div class="card">
         <h2>Audit Findings by Year and Status</h2>
         <div style="align-self: flex-end; margin-bottom: 10px;">
- <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
+ <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Audit Type:</label>
 <select id="auditTypeSelect" multiple onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
   <option value="">All Types</option>
 </select>
 <label for="auditCountrySelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-<select id="auditCountrySelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+<select id="auditCountrySelect" multiple onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
   <option value="">All Countries</option>
 </select>
 
@@ -247,7 +278,6 @@ select[multiple] {
   <select id="auditTypeSelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
     <option value="">All Types</option>
   </select>
-
   <label for="auditCountrySelectPie" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
   <select id="auditCountrySelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
     <option value="">All Countries</option>
@@ -357,7 +387,7 @@ function loadAuditTypes() {
         actionSelect.appendChild(option3);
       });
 
-      // ✅ Choices burada başlatılmalı
+      // ✅ Audit Type için Choices.js
       const auditTypeSelectEl = document.getElementById('auditTypeSelect');
       new Choices(auditTypeSelectEl, {
         removeItemButton: true,
@@ -367,12 +397,13 @@ function loadAuditTypes() {
         shouldSort: false
       });
 
-      // 🔽 Countries çekimi ayrı fetch içinde kalsın
+      // 🔽 Ülkeleri çek
       fetch(`${backendURL}/api/audit-countries`)
         .then(res => res.json())
         .then(countries => {
           const barCountrySelect = document.getElementById('auditCountrySelect');
           const pieCountrySelect = document.getElementById('auditCountrySelectPie');
+
           barCountrySelect.innerHTML = '<option value="">All Countries</option>';
           pieCountrySelect.innerHTML = '<option value="">All Countries</option>';
 
@@ -388,6 +419,16 @@ function loadAuditTypes() {
             pieCountrySelect.appendChild(option2);
           });
 
+          // ✅ Country için Choices.js (çoklu seçimli)
+          const auditCountrySelectEl = document.getElementById('auditCountrySelect');
+          new Choices(auditCountrySelectEl, {
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: 'Select Countries',
+            searchEnabled: true,
+            shouldSort: false
+          });
+
           // ✅ Grafikleri çiz
           reloadBarChart();
           reloadPieChart();
@@ -395,10 +436,6 @@ function loadAuditTypes() {
         });
     });
 }
-
-
-
-
 
 function reloadBarChart() {
   const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
