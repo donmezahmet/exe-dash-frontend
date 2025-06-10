@@ -1036,37 +1036,33 @@ datalabels: {
 let leadActionAgeChartInstance = null;
 function loadLeadActionAgeChart() {
   const select = document.getElementById('auditLeadSelectAge');
+  const selectedLead = select.value;
 
-  // Eğer dropdown zaten doluysa tekrar doldurma
+  // Eğer dropdown boşsa doldur (bir kereye mahsus)
   if (select.options.length <= 1) {
     fetch(`${backendURL}/api/finding-action-status-by-lead`)
       .then(res => res.json())
       .then(data => {
         const leads = Object.keys(data).sort();
-        leads.forEach(lead => {
-          const option = document.createElement('option');
-          option.value = lead;
-          option.textContent = lead;
-          select.appendChild(option);
-        });
+        leads
+          .filter(lead => lead && lead.trim() !== '')
+          .forEach(lead => {
+            const option = document.createElement('option');
+            option.value = lead;
+            option.textContent = lead;
+            select.appendChild(option);
+          });
       });
   }
 
-  fetch(`${backendURL}/api/finding-action-age-summary`)
+  // 🔄 API çağrısını filtreye göre yap
+  const query = selectedLead ? `?lead=${encodeURIComponent(selectedLead)}` : '';
+  fetch(`${backendURL}/api/finding-action-age-summary${query}`)
     .then(res => res.json())
     .then(data => {
       const labels = [
-        '-720–-360',
-        '-360–-180',
-        '-180–-90',
-        '-90–-30',
-        '-30–0',
-        '0–30',
-        '30–90',
-        '90–180',
-        '180–360',
-        '360–720',
-        '720+'
+        '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
+        '0–30', '30–90', '90–180', '180–360', '360–720', '720+'
       ];
 
       const backgroundColors = [
@@ -1127,6 +1123,7 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading updated action age chart:', err));
 }
+
 
 
 
