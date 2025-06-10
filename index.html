@@ -560,7 +560,7 @@ window.onload = () => {
   loadLeadStatusChart();
   loadAuditProgressChart(); 
   loadLeadActionAgeChart();
-
+ document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 }; // ← window.onload fonksiyonunun doğru kapanışı
 
 
