@@ -1035,6 +1035,23 @@ datalabels: {
 
 let leadActionAgeChartInstance = null;
 function loadLeadActionAgeChart() {
+  const select = document.getElementById('auditLeadSelectAge');
+
+  // Eğer dropdown zaten doluysa tekrar doldurma
+  if (select.options.length <= 1) {
+    fetch(`${backendURL}/api/finding-action-status-by-lead`)
+      .then(res => res.json())
+      .then(data => {
+        const leads = Object.keys(data).sort();
+        leads.forEach(lead => {
+          const option = document.createElement('option');
+          option.value = lead;
+          option.textContent = lead;
+          select.appendChild(option);
+        });
+      });
+  }
+
   fetch(`${backendURL}/api/finding-action-age-summary`)
     .then(res => res.json())
     .then(data => {
@@ -1053,17 +1070,8 @@ function loadLeadActionAgeChart() {
       ];
 
       const backgroundColors = [
-        '#95a5a6', // -720–-360
-        '#7f8c8d', // -360–-180
-        '#bdc3c7', // -180–-90
-        '#ecf0f1', // -90–-30
-        '#f39c12', // -30–0
-        '#27ae60', // 0–30
-        '#f1c40f', // 30–90
-        '#e67e22', // 90–180
-        '#d35400', // 180–360
-        '#c0392b', // 360–720
-        '#8e44ad'  // 720+
+        '#95a5a6', '#7f8c8d', '#bdc3c7', '#ecf0f1', '#f39c12',
+        '#27ae60', '#f1c40f', '#e67e22', '#d35400', '#c0392b', '#8e44ad'
       ];
 
       const values = labels.map(label => data[label] || 0);
@@ -1079,40 +1087,37 @@ function loadLeadActionAgeChart() {
             borderRadius: 6
           }]
         },
-   options: {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top',
-      display: false },
-      datalabels: {
-        display: false,
-        formatter: function(value) {
-          return value;
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              display: false,
+              formatter: value => value,
+              color: '#000',
+              font: { weight: 'bold', size: 12 },
+              anchor: 'end',
+              align: 'start',
+              clamp: true
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              ticks: {
+                maxRotation: 90,
+                minRotation: 90,
+                align: 'center'
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true
+            }
+          }
         },
-        color: '#000',
-        font: { weight: 'bold', size: 12 },
-        anchor: 'end',
-        align: 'start',
-        clamp: true
-      }
-    },
-    scales: {
-      x: {
-    stacked: true,
-    ticks: {
-      maxRotation: 90, // ↖️ maksimum döndürme derecesi
-      minRotation: 90, // ↖️ minimum döndürme derecesi
-      align: 'center'
-    }
-  },
-  y: {
-    stacked: true,
-    beginAtZero: true
-  }
-    }
-  },
-  plugins: [ChartDataLabels]
-};
+        plugins: [ChartDataLabels]
+      };
 
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
       leadActionAgeChartInstance = new Chart(
@@ -1122,6 +1127,7 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading updated action age chart:', err));
 }
+
 
 
 
