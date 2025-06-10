@@ -1076,10 +1076,7 @@ function loadLeadActionAgeChart() {
 
       const values = labels.map(label => data[label] || 0);
 
-      const ctx = document.getElementById('leadActionAgeChart').getContext('2d');
-      if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
-
-      leadActionAgeChartInstance = new Chart(ctx, {
+      const config = {
         type: 'bar',
         data: {
           labels,
@@ -1095,7 +1092,13 @@ function loadLeadActionAgeChart() {
           plugins: {
             legend: { display: false },
             datalabels: {
-              display: false
+              display: false,
+              formatter: value => value,
+              color: '#000',
+              font: { weight: 'bold', size: 12 },
+              anchor: 'end',
+              align: 'start',
+              clamp: true
             }
           },
           scales: {
@@ -1111,28 +1114,19 @@ function loadLeadActionAgeChart() {
               stacked: true,
               beginAtZero: true
             }
-          },
-          onClick: async (evt, elements) => {
-            if (!elements.length) return;
-            const index = elements[0].index;
-            const clickedLabel = labels[index];
-            if (clickedLabel === '180–360') {
-              try {
-                const response = await fetch(`${backendURL}/api/finding-action-age-details?bucket=180–360${query}`);
-                const details = await response.json();
-                showDetailsPopup('180–360', details);
-              } catch (err) {
-                console.error('Detay veriler alınamadı:', err);
-              }
-            }
           }
         },
         plugins: [ChartDataLabels]
-      });
+      };
+
+      if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
+      leadActionAgeChartInstance = new Chart(
+        document.getElementById('leadActionAgeChart').getContext('2d'),
+        config
+      );
     })
     .catch(err => console.error('Error loading action age chart:', err));
 }
-
 
 
 
