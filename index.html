@@ -1061,34 +1061,36 @@ function loadLeadActionAgeChart() {
 
       const values = labels.map(label => data[label] || 0);
 
-      const config = {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Number of Actions',
-            data: values,
-            backgroundColor: backgroundColors,
-            borderRadius: 6
-          }]
+   const config = {
+  type: 'bar',
+  data: {
+    labels: leads,
+    datasets
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      datalabels: {
+        display: true,
+        formatter: function(value) {
+          return value;
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: { anchor: 'end', align: 'top' }
-          },
-          scales: {
-            x: {
-              ticks: { autoSkip: false }
-            },
-            y: {
-              beginAtZero: true
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      };
+        color: '#000',
+        font: { weight: 'bold', size: 12 },
+        anchor: 'end',
+        align: 'start',
+        clamp: true
+      }
+    },
+    scales: {
+      x: { stacked: true },
+      y: { stacked: true, beginAtZero: true }
+    }
+  },
+  plugins: [ChartDataLabels]
+};
+
 
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
       leadActionAgeChartInstance = new Chart(
