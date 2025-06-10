@@ -1034,12 +1034,13 @@ datalabels: {
 }
 
 let leadActionAgeChartInstance = null;
+
 function loadLeadActionAgeChart() {
-  const select = document.getElementById('auditLeadSelectAge').value;
+  const select = document.getElementById('auditLeadSelectAge');
   const selectedLead = select.value;
   console.log("SEÇİLEN LEAD:", selectedLead);
 
-  // Eğer dropdown boşsa doldur (bir kereye mahsus)
+  // Eğer dropdown boşsa, lead listesini doldur
   if (select.options.length <= 1) {
     fetch(`${backendURL}/api/finding-action-status-by-lead`)
       .then(res => res.json())
@@ -1058,6 +1059,8 @@ function loadLeadActionAgeChart() {
 
   // 🔄 API çağrısını filtreye göre yap
   const query = selectedLead ? `?lead=${encodeURIComponent(selectedLead)}` : '';
+  console.log("API QUERY:", query);
+
   fetch(`${backendURL}/api/finding-action-age-summary${query}`)
     .then(res => res.json())
     .then(data => {
@@ -1122,8 +1125,9 @@ function loadLeadActionAgeChart() {
         config
       );
     })
-    .catch(err => console.error('Error loading updated action age chart:', err));
+    .catch(err => console.error('Error loading action age chart:', err));
 }
+
 
 
 
