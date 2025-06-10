@@ -363,10 +363,17 @@ select[multiple] {
   </div>
   <canvas id="auditProgressChart"></canvas>
 </div>
-<div class="card">
+<<div class="card">
   <h2>Finding Actions by Lead and Action Age</h2>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+    <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Leads</option>
+    </select>
+  </div>
   <canvas id="leadActionAgeChart"></canvas>
 </div>
+
 <!-- ✅ Yeni chart burada bitti -->
 
      <div class="row">
@@ -1028,69 +1035,76 @@ datalabels: {
 
 let leadActionAgeChartInstance = null;
 function loadLeadActionAgeChart() {
+  const selectedLead = document.getElementById('auditLeadSelectAge')?.value;
+
   fetch(`${backendURL}/api/finding-action-age-summary`)
     .then(res => res.json())
     .then(data => {
       const labels = [
-        '-720–-360',
-        '-360–-180',
-        '-180–-90',
-        '-90–-30',
-        '-30–0',
-        '0–30',
-        '30–90',
-        '90–180',
-        '180–360',
-        '360–720',
-        '720+'
+        '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
+        '0–30', '30–90', '90–180', '180–360', '360–720', '720+'
       ];
 
       const backgroundColors = [
-        '#95a5a6', // -720–-360
-        '#7f8c8d', // -360–-180
-        '#bdc3c7', // -180–-90
-        '#ecf0f1', // -90–-30
-        '#f39c12', // -30–0
-        '#27ae60', // 0–30
-        '#f1c40f', // 30–90
-        '#e67e22', // 90–180
-        '#d35400', // 180–360
-        '#c0392b', // 360–720
-        '#8e44ad'  // 720+
+        '#95a5a6', '#7f8c8d', '#bdc3c7', '#ecf0f1', '#f39c12',
+        '#27ae60', '#f1c40f', '#e67e22', '#d35400', '#c0392b', '#8e44ad'
       ];
 
-      const values = labels.map(label => data[label] || 0);
+      // ✅ Unique lead'leri dropdown'a ekle
+      const leadSet = new Set();
+      Object.values(data).forEach(obj => {
+        if (obj.lead) leadSet.add(obj.lead);
+      });
 
-   const config = {
-  type: 'bar',
-  data: {
-    labels: leads,
-    datasets
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      datalabels: {
-        display: true,
-        formatter: function(value) {
-          return value;
+      const leadDropdown = document.getElementById('auditLeadSelectAge');
+      const currentValue = leadDropdown.value;
+      leadDropdown.innerHTML = `<option value="">All Leads</option>` +
+        Array.from(leadSet).sort().map(lead => `<option value="${lead}">${lead}</option>`).join('');
+      leadDropdown.value = currentValue;
+
+      // ✅ Seçili lead'e göre veriyi filtrele
+      const filteredData = selectedLead
+        ? Object.values(data).filter(obj => obj.lead === selectedLead)
+        : Object.values(data);
+
+      // ✅ Label bazlı toplam oluştur
+      const summary = {};
+      labels.forEach(label => summary[label] = 0);
+      filteredData.forEach(item => {
+        labels.forEach(label => {
+          summary[label] += item[label] || 0;
+        });
+      });
+
+      const values = labels.map(label => summary[label]);
+
+      const config = {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Number of Actions',
+            data: values,
+            backgroundColor: backgroundColors,
+            borderRadius: 6
+          }]
         },
-        color: '#000',
-        font: { weight: 'bold', size: 12 },
-        anchor: 'end',
-        align: 'start',
-        clamp: true
-      }
-    },
-    scales: {
-      x: { stacked: true },
-      y: { stacked: true, beginAtZero: true }
-    }
-  },
-  plugins: [ChartDataLabels]
-};
-
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              ticks: { maxRotation: 90, minRotation: 90, align: 'center' }
+            },
+            y: { stacked: true, beginAtZero: true }
+          }
+        },
+        plugins: [ChartDataLabels]
+      };
 
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
       leadActionAgeChartInstance = new Chart(
@@ -1098,8 +1112,9 @@ function loadLeadActionAgeChart() {
         config
       );
     })
-    .catch(err => console.error('Error loading updated action age chart:', err));
+    .catch(err => console.error('Error loading filtered action age chart:', err));
 }
+
 
 
 
