@@ -1035,8 +1035,9 @@ datalabels: {
 
 let leadActionAgeChartInstance = null;
 function loadLeadActionAgeChart() {
-  const select = document.getElementById('auditLeadSelectAge');
+  const select = document.getElementById('auditLeadSelectAge').value;
   const selectedLead = select.value;
+  console.log("SEÇİLEN LEAD:", selectedLead);
 
   // Eğer dropdown boşsa doldur (bir kereye mahsus)
   if (select.options.length <= 1) {
