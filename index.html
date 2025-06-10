@@ -751,32 +751,7 @@ function loadLeadStatusChart() {
 }
 
 
-        // Horizontal Text Chart
-        fetch(`${backendURL}/api/risk-scale-horizontal`)
-          .then(res => res.json())
-          .then(data => {
-            const symbols = {
-              'Critical': '█',
-              'High': '▓',
-              'Medium': '▒',
-              'Low': '░'
-            };
-            const order = ['Critical', 'High', 'Medium', 'Low'];
-            const lines = [];
-
-            Object.entries(data).forEach(([project, risks]) => {
-              let line = `${project}`;
-              order.forEach(risk => {
-                const count = risks[risk] || 0;
-                if (count > 0) {
-                  line += ` ├─${symbols[risk].repeat(count)} (${risk})`;
-                }
-              });
-              lines.push(line);
-            });
-
-            document.getElementById('riskTextChart').textContent = lines.join('\n');
-          });
+  
 
         // Two Dimensional Table
         fetch(`${backendURL}/api/statistics-by-control-and-risk`)
