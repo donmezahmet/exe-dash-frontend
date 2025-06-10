@@ -1053,52 +1053,80 @@ datalabels: {
 
 let leadActionAgeChartInstance = null;
 
+let leadActionAgeChartInstance = null;
+
 function loadLeadActionAgeChart() {
-  fetch(`${backendURL}/api/finding-action-age-by-lead`)
+  fetch(`${backendURL}/api/finding-action-age-summary`)
     .then(res => res.json())
     .then(data => {
-      const leads = Object.keys(data);
-      const ageBuckets = ['0–30', '30–90', '90–180', '180–360', '360–720', '720+'];
-      const bucketColors = {
-        '0–30': '#2ecc71',
-        '30–90': '#f1c40f',
-        '90–180': '#e67e22',
-        '180–360': '#d35400',
-        '360–720': '#c0392b',
-        '720+': '#8e44ad'
-      };
+      const labels = [
+        '-720–-360',
+        '-360–-180',
+        '-180–-90',
+        '-90–-30',
+        '-30–0',
+        '0–30',
+        '30–90',
+        '90–180',
+        '180–360',
+        '360–720',
+        '720+'
+      ];
 
-      const datasets = ageBuckets.map(bucket => ({
-        label: bucket,
-        data: leads.map(lead => data[lead]?.[bucket] || 0),
-        backgroundColor: bucketColors[bucket],
-        borderRadius: 6
-      }));
+      const backgroundColors = [
+        '#95a5a6', // -720–-360
+        '#7f8c8d', // -360–-180
+        '#bdc3c7', // -180–-90
+        '#ecf0f1', // -90–-30
+        '#f39c12', // -30–0
+        '#27ae60', // 0–30
+        '#f1c40f', // 30–90
+        '#e67e22', // 90–180
+        '#d35400', // 180–360
+        '#c0392b', // 360–720
+        '#8e44ad'  // 720+
+      ];
+
+      const values = labels.map(label => data[label] || 0);
 
       const config = {
         type: 'bar',
         data: {
-          labels: leads,
-          datasets
+          labels,
+          datasets: [{
+            label: 'Number of Actions',
+            data: values,
+            backgroundColor: backgroundColors,
+            borderRadius: 6
+          }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { position: 'top' },
-            datalabels: { display: false }
+            legend: { display: false },
+            datalabels: { anchor: 'end', align: 'top' }
           },
           scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true }
+            x: {
+              ticks: { autoSkip: false }
+            },
+            y: {
+              beginAtZero: true
+            }
           }
         },
         plugins: [ChartDataLabels]
       };
 
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
-      leadActionAgeChartInstance = new Chart(document.getElementById('leadActionAgeChart').getContext('2d'), config);
-    });
+      leadActionAgeChartInstance = new Chart(
+        document.getElementById('leadActionAgeChart').getContext('2d'),
+        config
+      );
+    })
+    .catch(err => console.error('Error loading updated action age chart:', err));
 }
+
 
 
   </script>
