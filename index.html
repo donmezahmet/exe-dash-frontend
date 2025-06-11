@@ -1191,67 +1191,36 @@ function loadLeadActionAgeChart() {
     .catch(err => console.error('Error loading combined action age chart:', err));
 }
 async function loadProjectRiskChart() {
-  const ctx = document.getElementById('projectRiskChart').getContext('2d');
-
   try {
-   const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
     const data = await response.json();
 
-    const labels = data.map(item => item.project);
+    const container = document.getElementById('projectRiskTableContainer');
     const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
+    const headers = ['Audit Project', ...riskLevels, 'T:'];
 
-    const datasets = riskLevels.map(level => ({
-      label: level,
-      data: data.map(item => item[level] || 0),
-      stack: 'stack1'
-    }));
+    let html = '<table><thead><tr>';
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
 
-    if (window.projectRiskChartInstance) {
-      window.projectRiskChartInstance.destroy();
-    }
-
-    window.projectRiskChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Risk Level Distribution by Audit Project'
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false
-          }
-        },
-        interaction: {
-          mode: 'nearest',
-          axis: 'x',
-          intersect: false
-        },
-        scales: {
-          x: {
-            stacked: true
-          },
-          y: {
-            stacked: true,
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Finding Count'
-            }
-          }
-        }
-      }
+    data.forEach(row => {
+      html += '<tr>';
+      html += `<td>${row.project}</td>`;
+      riskLevels.forEach(level => {
+        const count = row[level] || 0;
+        html += `<td>${count}</td>`;
+      });
+      html += `<td>${row.Total}</td>`;
+      html += '</tr>';
     });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
   } catch (error) {
-    console.error('Failed to load project risk chart:', error);
+    console.error('Failed to load project risk table:', error);
   }
 }
+
 
 
 function loadInvestigationScoreCards() {
