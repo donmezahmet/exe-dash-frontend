@@ -410,10 +410,17 @@ select[multiple] {
   </div>
   <canvas id="leadActionAgeChart"></canvas>
 </div>
+
+<div class="card">
+  <h2>Risk Level Distribution by Audit Project</h2>
+  <canvas id="projectRiskChart"></canvas>
+</div>
+
 <div class="card">
   <h2>Investigations by Year</h2>
-  <div id="investigationScoreCards" class="score-card-container"></div>
+  <div class="score-card-container" id="investigationScoreCards"></div>
 </div>
+
 
 
 <!-- ✅ Yeni chart burada bitti -->
@@ -600,11 +607,12 @@ window.onload = () => {
   reloadPieChart();
   reloadActionPieChart();
   loadLeadStatusChart();
-  loadAuditProgressChart(); 
+  loadAuditProgressChart();
   loadLeadActionAgeChart();
-  loadInvestigationScoreCards(); // ✅ Yeni eklenen fonksiyon
+  loadProjectRiskChart(); // ✅ Yeni chart fonksiyonu burada çağrıldı
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 };
+
 
 
 
@@ -1182,6 +1190,69 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading combined action age chart:', err));
 }
+async function loadProjectRiskChart() {
+  const ctx = document.getElementById('projectRiskChart').getContext('2d');
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/finding-risk-distribution-by-project`);
+    const data = await response.json();
+
+    const labels = data.map(item => item.project);
+    const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
+
+    const datasets = riskLevels.map(level => ({
+      label: level,
+      data: data.map(item => item[level] || 0),
+      stack: 'stack1'
+    }));
+
+    if (window.projectRiskChartInstance) {
+      window.projectRiskChartInstance.destroy();
+    }
+
+    window.projectRiskChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Risk Level Distribution by Audit Project'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        },
+        scales: {
+          x: {
+            stacked: true
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Finding Count'
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Failed to load project risk chart:', error);
+  }
+}
+
 
 function loadInvestigationScoreCards() {
   fetch(`${backendURL}/api/investigation-counts`)
