@@ -243,11 +243,6 @@ select[multiple] {
   width: 100%;
   max-width: 300px;
 }
-
-
-
-
-
     #detailBox {
       display: none;
       position: fixed;
@@ -356,6 +351,46 @@ select[multiple] {
   background-color: #1e272e;
   border-top: 2px solid #57606f;
 }
+#auditNameStatusTableContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+#auditNameStatusTableContainer table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: #1c1f26;
+  color: #e0e6f0;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 13px;
+}
+
+#auditNameStatusTableContainer th,
+#auditNameStatusTableContainer td {
+  padding: 8px 10px;
+  text-align: center;
+  border: 1px solid #2f3640;
+  word-break: break-word;
+}
+
+#auditNameStatusTableContainer th {
+  background-color: #2f3640;
+  font-weight: 600;
+  color: #dcdde1;
+}
+
+#auditNameStatusTableContainer td {
+  color: #3498db;
+}
+
+#auditNameStatusTableContainer tr:last-child {
+  font-weight: bold;
+  background-color: #1e272e;
+  border-top: 2px solid #57606f;
+}
+
 
 
   </style>
@@ -423,8 +458,9 @@ select[multiple] {
 </div>
 <div class="card">
   <h2>Finding Actions by Audit Name and Status</h2>
-  <div id="auditNameStatusTableContainer"></div>
+    <div id="auditNameStatusTableContainer" style="max-height: 400px; overflow-y: auto;"></div>
 </div>
+
   </div>
 </div>
 
@@ -1317,15 +1353,7 @@ async function loadInvestigationScores() {
 async function loadAuditNameStatusTable() {
   try {
     const res = await fetch(`${backendURL}/api/finding-actions-basic`);
-const data = await res.json();
-
-// Eğer array değilse hata göster ve çık
-if (!Array.isArray(data)) {
-  console.error('API response is not an array:', data);
-  document.getElementById('auditNameStatusTableContainer').innerHTML = 'Invalid response from server.';
-  return;
-}
-
+    const data = await res.json();
 
     const container = document.getElementById('auditNameStatusTableContainer');
     container.innerHTML = '';
@@ -1348,8 +1376,8 @@ if (!Array.isArray(data)) {
     const allStatuses = Array.from(statusSet).sort(); // Alfabetik sırala
     const headers = ['Audit Name', ...allStatuses, 'T:'];
 
-    // 🔠 Tablo başlığı
-    let html = '<table><thead><tr>';
+    // ✅ Tablo HTML'i oluştur
+    let html = '<table class="audit-status-table"><thead><tr>';
     headers.forEach(h => html += `<th>${h}</th>`);
     html += '</tr></thead><tbody>';
 
@@ -1371,6 +1399,7 @@ if (!Array.isArray(data)) {
     document.getElementById('auditNameStatusTableContainer').innerHTML = 'Failed to load table.';
   }
 }
+
 
 
 
