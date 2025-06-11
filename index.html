@@ -940,6 +940,8 @@ function loadActionPieChart() {
 
 let auditProgressChartInstance = null;
 
+let auditProgressChartInstance = null;
+
 function loadAuditProgressChart() {
   const selectedLead = document.getElementById('auditLeadSelect')?.value;
   const selectedYear = document.getElementById('auditYearSelect')?.value;
@@ -971,38 +973,31 @@ function loadAuditProgressChart() {
       leadSelect.value = selectedLead;
       yearSelect.value = selectedYear;
 
-      const allStages = ['Planned', 'Fieldwork', 'Reporting', 'Completed'];
-      const backgroundColors = {
-        'Planned': '#27ae60',
-        'Fieldwork': '#27ae60',
-        'Reporting': '#27ae60',
-        'Completed': '#27ae60'
-      };
+      const allStages = ['Planned', 'Fieldwork', 'Pre Closing Meeting', 'Closing Meeting', 'Completed'];
       const greyColor = '#ecf0f1';
+      const greenColor = '#27ae60';
+      const segmentValue = 1 / allStages.length;
 
-      // Her aşama için ayrı dataset oluşturuluyor (1 audit için 4 segment = bar)
-const datasets = allStages.map((stage, idx) => ({
-  label: stage,
-  data: filteredData.map(d => 0.25), // her biri sabit uzunlukta olacak
-  backgroundColor: filteredData.map(d => d.progressLevel > idx ? backgroundColors[stage] : greyColor),
-  stack: 'same', // ❗️ Bu satır kritik – hepsi aynı satıra yığılacak
-datalabels: {
-  display: true,
-  formatter: function(value, context) {
-    return allStages[context.datasetIndex];
-  },
-  color: function(context) {
-    const bg = context.dataset.backgroundColor[context.dataIndex];
-    return bg === greyColor ? '#7f8c8d' : '#ffffff';
-  },
-  font: { weight: 'bold', size: 12 },
-  anchor: 'center',
-  align: 'center',
-  clamp: true
-},
-  borderRadius: 6,
-  borderSkipped: false
-}));
+      const datasets = allStages.map((stage, idx) => ({
+        label: stage,
+        data: filteredData.map(() => segmentValue),
+        backgroundColor: filteredData.map(d => d.progressLevel > idx ? greenColor : greyColor),
+        stack: 'same',
+        datalabels: {
+          display: true,
+          formatter: () => stage,
+          color: function(context) {
+            const bg = context.dataset.backgroundColor[context.dataIndex];
+            return bg === greyColor ? '#7f8c8d' : '#ffffff';
+          },
+          font: { weight: 'bold', size: 12 },
+          anchor: 'center',
+          align: 'center',
+          clamp: true
+        },
+        borderRadius: 6,
+        borderSkipped: false
+      }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
@@ -1032,6 +1027,7 @@ datalabels: {
       });
     });
 }
+
 
 let leadActionAgeChartInstance = null;
 
