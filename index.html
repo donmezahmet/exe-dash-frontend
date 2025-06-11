@@ -361,7 +361,7 @@ select[multiple] {
       <option value="">All Years</option>
     </select>
   </div>
-  <canvas id="auditProgressChart"></canvas>
+ <canvas id="auditProgressChart" style="height: 900px;"></canvas>
 </div>
 <div class="card">
   <h2>Finding Actions Aging</h2>
@@ -981,18 +981,21 @@ function loadAuditProgressChart() {
         data: filteredData.map(() => segmentValue),
         backgroundColor: filteredData.map(d => d.progressLevel > idx ? greenColor : greyColor),
         stack: 'same',
-        datalabels: {
-          display: true,
-          formatter: () => stage,
-          color: function(context) {
-            const bg = context.dataset.backgroundColor[context.dataIndex];
-            return bg === greyColor ? '#7f8c8d' : '#ffffff';
-          },
-          font: { weight: 'bold', size: 12 },
-          anchor: 'center',
-          align: 'center',
-          clamp: true
-        },
+   datalabels: {
+  display: true,
+  formatter: function(value, context) {
+    return allStages[context.datasetIndex];
+  },
+  color: function(context) {
+    const bg = context.dataset.backgroundColor[context.dataIndex];
+    return bg === greyColor ? '#7f8c8d' : '#ffffff';
+  },
+  font: { weight: 'normal', size: 10 },
+  anchor: 'center',
+  align: 'center',
+  clamp: true
+}
+
         borderRadius: 6,
         borderSkipped: false
       }));
