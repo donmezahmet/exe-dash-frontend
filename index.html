@@ -1249,11 +1249,15 @@ async function loadProjectRiskChart() {
     data.forEach(row => {
       html += '<tr>';
       html += `<td>${row.project}</td>`;
+
+      let total = 0;
       riskLevels.forEach(level => {
         const count = row[level] || 0;
+        total += count;
         html += `<td>${count}</td>`;
       });
-      html += `<td>${row.Total}</td>`;
+
+      html += `<td>${total}</td>`;
       html += '</tr>';
     });
 
@@ -1263,6 +1267,7 @@ async function loadProjectRiskChart() {
     console.error('Failed to load project risk table:', error);
   }
 }
+
 
 async function loadInvestigationScores() {
   try {
