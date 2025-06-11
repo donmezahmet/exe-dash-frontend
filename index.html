@@ -421,6 +421,13 @@ select[multiple] {
   <canvas id="actionPie"></canvas>
   <div class="legend" id="actionLegend"></div>
 </div>
+<div class="card">
+  <h2>Action Status Breakdown by Audit Name</h2>
+  <div id="auditNameStatusTableContainer" style="width: 100%; overflow-x: auto;">
+    <!-- Tablo JS ile buraya eklenecek -->
+  </div>
+</div>
+
 
 <!-- ✅ Yeni chart burada başlıyor -->
 <div class="card">
@@ -654,6 +661,7 @@ window.onload = () => {
    loadInvestigationScores();
   loadProjectRiskChart();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
+  loadAuditNameStatusTable();
 };
 
 
@@ -1304,6 +1312,47 @@ async function loadInvestigationScores() {
     console.error("Failed to load investigation scores:", error);
   }
 }
+
+
+async function loadAuditNameStatusTable() {
+  try {
+    const res = await fetch(`${backendURL}/api/finding-actions-by-audit-name`);
+    const data = await res.json();
+
+    const container = document.getElementById('auditNameStatusTableContainer');
+    container.innerHTML = '';
+
+    // Tüm unique status'ları topla
+    const allStatusesSet = new Set();
+    data.forEach(row => Object.keys(row.statuses).forEach(status => allStatusesSet.add(status)));
+
+    const allStatuses = Array.from(allStatusesSet).sort(); // Alfabetik sırala
+    const headers = ['Audit Name', ...allStatuses, 'T:'];
+
+    // Tablo başlığı
+    let html = '<table><thead><tr>';
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+
+    data.forEach(row => {
+      let total = 0;
+      html += `<tr><td>${row.auditName}</td>`;
+      allStatuses.forEach(status => {
+        const count = row.statuses[status] || 0;
+        total += count;
+        html += `<td>${count}</td>`;
+      });
+      html += `<td><strong>${total}</strong></td></tr>`;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Failed to load audit name × status table:', error);
+    document.getElementById('auditNameStatusTableContainer').innerHTML = 'Failed to load table.';
+  }
+}
+
 
 
 
