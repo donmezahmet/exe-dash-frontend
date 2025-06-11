@@ -352,7 +352,7 @@ select[multiple] {
   border-top: 2px solid #57606f;
 }
 #auditNameStatusTableContainer {
-  max-height: 400px;
+  max-height: 600px;
   overflow-y: auto;
   width: 100%;
 }
@@ -466,61 +466,64 @@ select[multiple] {
 
 
 <!-- ✅ Yeni chart burada başlıyor -->
-<div class="card">
-  <h2>Finding Actions by Lead and Status</h2>
-  <canvas id="leadStatusChart"></canvas>
-</div>
-<div class="card">
-  <h2> Audit Plan - Progress Tracker</h2>
-  <div style="align-self: flex-end; margin-bottom: 10px;">
-    <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Leads</option>
-    </select>
-
-    <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
-    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Years</option>
-    </select>
+<!-- ✅ Yeni chart burada başlıyor -->
+<div class="row">
+  <div class="card">
+    <h2>Finding Actions by Lead and Status</h2>
+    <canvas id="leadStatusChart"></canvas>
   </div>
- <canvas id="auditProgressChart" style="height: 900px;"></canvas>
-</div>
-<div class="card">
-  <h2>Finding Actions Aging</h2>
-  <div style="align-self: flex-end; margin-bottom: 10px;">
-    <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-    <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Leads</option>
-    </select>
+
+  <div class="card">
+    <h2>Audit Plan - Progress Tracker</h2>
+    <div style="align-self: flex-end; margin-bottom: 10px;">
+      <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+      <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <option value="">All Leads</option>
+      </select>
+
+      <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
+      <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <option value="">All Years</option>
+      </select>
+    </div>
+    <canvas id="auditProgressChart" style="height: 900px;"></canvas>
   </div>
-  <canvas id="leadActionAgeChart"></canvas>
+
+  <div class="card">
+    <h2>Finding Actions Aging</h2>
+    <div style="align-self: flex-end; margin-bottom: 10px;">
+      <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+      <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <option value="">All Leads</option>
+      </select>
+    </div>
+    <canvas id="leadActionAgeChart"></canvas>
+  </div>
+
+  <div class="card">
+    <h2>Risk Level Distribution by Audit Project</h2>
+    <div id="projectRiskTableContainer"></div>
+  </div>
+
+  <div class="card">
+    <h2>Investigations by Year</h2>
+    <div class="score-card-container" id="investigationScoreCards"></div>
+  </div>
 </div>
-
-<div class="card">
-  <h2>Risk Level Distribution by Audit Project</h2>
-<div id="projectRiskTableContainer"></div>
-</div>
-
-<div class="card">
-  <h2>Investigations by Year</h2>
-  <div class="score-card-container" id="investigationScoreCards"></div>
-</div>
-
-
-
 <!-- ✅ Yeni chart burada bitti -->
 
-     <div class="row">
-      <div class="card">
-        <h2>Two Dimensional Filter Statistics: Internal Control</h2>
-        <div id="controlRiskTableContainer"></div>
-      </div>
-      <div class="card">
-        <h2>Two Dimensional Filter Statistics: Risk Type</h2>
-        <div id="typeRiskTableContainer"></div>
-      </div>
+<!-- Çift tablo satırı -->
+<div class="row">
+  <div class="card">
+    <h2>Two Dimensional Filter Statistics: Internal Control</h2>
+    <div id="controlRiskTableContainer"></div>
+  </div>
+  <div class="card">
+    <h2>Two Dimensional Filter Statistics: Risk Type</h2>
+    <div id="typeRiskTableContainer"></div>
+  </div>
+</div>
 
-    </div>
 
     <!-- Metin Görünümü Alt Kart -->
     
