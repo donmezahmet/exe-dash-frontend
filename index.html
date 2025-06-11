@@ -651,7 +651,8 @@ window.onload = () => {
   loadLeadStatusChart();
   loadAuditProgressChart();
   loadLeadActionAgeChart();
-  loadProjectRiskChart(); // ✅ Yeni chart fonksiyonu burada çağrıldı
+   loadInvestigationScores();
+  loadProjectRiskChart();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 };
 
@@ -1263,42 +1264,42 @@ async function loadProjectRiskChart() {
   }
 }
 
-
-
-async function loadProjectRiskChart() {
+async function loadInvestigationScores() {
   try {
-    const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
-    const data = await response.json();
+    const res = await fetch(`${backendURL}/api/investigation-counts`);
+    const data = await res.json();
+    console.log("Investigation API Response:", data); // 👈 mutlaka ekle
 
-    const container = document.getElementById('projectRiskTableContainer');
-    const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
-    const headers = ['Audit Project', ...riskLevels, 'T:'];
+    const container = document.getElementById('investigationScoreCards');
+    container.innerHTML = '';
 
-    let html = '<table><thead><tr>';
-    headers.forEach(h => html += `<th>${h}</th>`);
-    html += '</tr></thead><tbody>';
+    const grouped = {};
 
-    data.forEach(row => {
-      html += '<tr>';
-      html += `<td>${row.project}</td>`;
-
-      let total = 0;
-      riskLevels.forEach(level => {
-        const count = row[level] || 0;
-        total += count;
-        html += `<td>${count}</td>`;
-      });
-
-      html += `<td>${total}</td>`;
-      html += '</tr>';
+    data.forEach(item => {
+      if (!grouped[item.year]) grouped[item.year] = 0;
+      grouped[item.year] += item.count;
     });
 
-    html += '</tbody></table>';
-    container.innerHTML = html;
+    const years = Object.keys(grouped).sort().reverse();
+
+    years.forEach(year => {
+      const card = document.createElement('div');
+      card.className = 'score-card';
+
+      card.innerHTML = `
+        <p>Investigation Count</p>
+        <h3>${year}</h3>
+        <div class="count">${grouped[year]}</div>
+      `;
+
+      container.appendChild(card);
+    });
+
   } catch (error) {
-    console.error('Failed to load project risk table:', error);
+    console.error("Failed to load investigation scores:", error);
   }
 }
+
 
 
   </script>
