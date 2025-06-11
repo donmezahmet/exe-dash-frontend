@@ -409,18 +409,26 @@ select[multiple] {
         <canvas id="statusPie"></canvas>
         <div class="legend" id="statusLegend"></div>
       </div>
-  <div class="card">
-  <h2>Finding Actions - Status Distribution</h2>
-  <div style="align-self: flex-end; margin-bottom: 10px;">
-    <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-
-    <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Types</option>
-    </select>
+  <div class="card" style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; width: 100%;">
+  <div style="flex: 1 1 50%; max-width: 50%; padding-right: 20px;">
+    <h2>Finding Actions - Status Distribution</h2>
+    <div style="align-self: flex-end; margin-bottom: 10px;">
+      <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
+      <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <option value="">All Types</option>
+      </select>
+    </div>
+    <canvas id="actionPie"></canvas>
+    <div class="legend" id="actionLegend"></div>
   </div>
-  <canvas id="actionPie"></canvas>
-  <div class="legend" id="actionLegend"></div>
+  <div style="flex: 1 1 50%; max-width: 50%; overflow-x: auto;">
+    <h2 style="margin-top: 0;">Action Status Breakdown</h2>
+    <div id="actionStatusTableContainer" style="max-height: 360px; overflow-y: auto;">
+      <!-- Tablo JS ile buraya yüklenecek -->
+    </div>
+  </div>
 </div>
+
 
 <!-- ✅ Yeni chart burada başlıyor -->
 <div class="card">
@@ -745,8 +753,14 @@ function reloadActionPieChart() {
   fetch(url)
     .then(res => res.json())
     .then(data => {
+      // Pie chart için verileri ayıkla
       const labels = Object.keys(data);
-      const values = Object.values(data);
+      const values = labels.map(label => {
+        const entries = data[label];
+        return Array.isArray(entries)
+          ? entries.reduce((sum, item) => sum + item.count, 0)
+          : 0;
+      });
 
       const backgroundColors = labels.map(label => {
         const upper = label.toUpperCase();
@@ -755,6 +769,7 @@ function reloadActionPieChart() {
         return predefinedColors[upper] || fallbackColors[colorIndex++ % fallbackColors.length];
       });
 
+      // Pie chart'ı güncelle
       if (actionPieChartInstance) actionPieChartInstance.destroy();
 
       actionPieChartInstance = new Chart(document.getElementById('actionPie').getContext('2d'), {
@@ -785,6 +800,7 @@ function reloadActionPieChart() {
         plugins: [ChartDataLabels]
       });
 
+      // Legend güncelle
       const total = values.reduce((a, b) => a + b, 0);
       const legendEl = document.getElementById('actionLegend');
       legendEl.innerHTML = `<strong>Total Actions:</strong> ${total}<br><br>`;
@@ -795,8 +811,43 @@ function reloadActionPieChart() {
             ${label}: <strong style="margin-left:5px;">${values[i]}</strong>
           </div>`;
       });
+
+      // ✅ TABLO EKLEME: Status + Audit Name Breakdown
+      const tableContainer = document.getElementById('auditStatusTableContainer');
+      const breakdown = {}; // { auditName: { status: count } }
+
+      Object.entries(data).forEach(([status, entries]) => {
+        if (Array.isArray(entries)) {
+          entries.forEach(({ auditName, count }) => {
+            if (!breakdown[auditName]) breakdown[auditName] = {};
+            breakdown[auditName][status] = count;
+          });
+        }
+      });
+
+      const allStatuses = labels;
+      const headers = ['Audit Name', ...allStatuses, 'Total'];
+      let html = '<table><thead><tr>';
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+
+      Object.entries(breakdown).forEach(([auditName, statusCounts]) => {
+        let rowHtml = `<tr><td>${auditName}</td>`;
+        let total = 0;
+        allStatuses.forEach(status => {
+          const count = statusCounts[status] || 0;
+          total += count;
+          rowHtml += `<td>${count}</td>`;
+        });
+        rowHtml += `<td>${total}</td></tr>`;
+        html += rowHtml;
+      });
+
+      html += '</tbody></table>';
+      tableContainer.innerHTML = html;
     });
 }
+
 
 let leadStatusChartInstance = null;
 
