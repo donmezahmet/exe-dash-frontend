@@ -1194,7 +1194,7 @@ async function loadProjectRiskChart() {
   const ctx = document.getElementById('projectRiskChart').getContext('2d');
 
   try {
-    const response = await fetch(`${apiBaseUrl}/api/finding-risk-distribution-by-project`);
+   const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
     const data = await response.json();
 
     const labels = data.map(item => item.project);
