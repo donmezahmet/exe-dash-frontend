@@ -279,6 +279,43 @@ select[multiple] {
     #detailBox li {
       margin-bottom: 6px;
     }
+
+    .score-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.score-card {
+  background-color: #1c1f26;
+  color: #ecf0f1;
+  border-radius: 12px;
+  padding: 20px 30px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  text-align: center;
+  min-width: 120px;
+  flex: 1 0 120px;
+}
+
+.score-card h3 {
+  font-size: 20px;
+  margin: 0;
+  color: #3498db;
+}
+
+.score-card p {
+  font-size: 14px;
+  margin: 6px 0 4px;
+  color: #95a5a6;
+}
+
+.score-card .count {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2ecc71;
+}
+
   </style>
 </head>
 <body>
@@ -373,6 +410,11 @@ select[multiple] {
   </div>
   <canvas id="leadActionAgeChart"></canvas>
 </div>
+<div class="card">
+  <h2>Investigations by Year</h2>
+  <div id="investigationScoreCards" class="score-card-container"></div>
+</div>
+
 
 <!-- ✅ Yeni chart burada bitti -->
 
@@ -560,8 +602,10 @@ window.onload = () => {
   loadLeadStatusChart();
   loadAuditProgressChart(); 
   loadLeadActionAgeChart();
- document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
-}; // ← window.onload fonksiyonunun doğru kapanışı
+  loadInvestigationScoreCards(); // ✅ Yeni eklenen fonksiyon
+  document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
+};
+
 
 
 
@@ -1138,6 +1182,40 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading combined action age chart:', err));
 }
+
+function loadInvestigationScoreCards() {
+  fetch(`${backendURL}/api/investigation-counts`)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('investigationScoreCards');
+      container.innerHTML = '';
+
+      const yearMap = {};
+
+      // Yılları grupla
+      data.forEach(item => {
+        if (!item.year) return;
+        const year = item.year;
+        yearMap[year] = (yearMap[year] || 0) + (item.count || 0);
+      });
+
+      // Score card oluştur
+      Object.entries(yearMap)
+        .sort((a, b) => b[0] - a[0]) // Yıla göre büyükten küçüğe sırala
+        .forEach(([year, count]) => {
+          const card = document.createElement('div');
+          card.className = 'score-card';
+          card.innerHTML = `
+            <h3>${year}</h3>
+            <p>Investigations</p>
+            <div class="count">${count}</div>
+          `;
+          container.appendChild(card);
+        });
+    })
+    .catch(err => console.error('Failed to load investigation score cards:', err));
+}
+
 
   </script>
 </body>
