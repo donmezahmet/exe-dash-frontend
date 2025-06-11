@@ -1040,7 +1040,6 @@ function loadLeadActionAgeChart() {
   const selectedLead = select.value;
   console.log("SEÇİLEN LEAD:", selectedLead);
 
-  // Eğer dropdown boşsa, lead listesini doldur
   if (select.options.length <= 1) {
     fetch(`${backendURL}/api/finding-action-status-by-lead`)
       .then(res => res.json())
@@ -1057,13 +1056,17 @@ function loadLeadActionAgeChart() {
       });
   }
 
-  // 🔄 API çağrısını filtreye göre yap
   const query = selectedLead ? `?lead=${encodeURIComponent(selectedLead)}` : '';
-  console.log("API QUERY:", query);
+  const baseURL = `${backendURL}/api`;
 
-  fetch(`${backendURL}/api/finding-action-age-summary${query}`)
-    .then(res => res.json())
-    .then(data => {
+  // İki API çağrısı birden: open+overdue ve delayed
+  const urls = [
+    `${baseURL}/finding-action-age-summary${query}`,
+    `${baseURL}/finding-action-age-summary-delayed${query}`
+  ];
+
+  Promise.all(urls.map(url => fetch(url).then(res => res.json())))
+    .then(([openData, delayedData]) => {
       const labels = [
         '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
         '0–30', '30–90', '90–180', '180–360', '360–720', '720+'
@@ -1074,7 +1077,10 @@ function loadLeadActionAgeChart() {
         '#27ae60', '#f1c40f', '#e67e22', '#d35400', '#c0392b', '#8e44ad'
       ];
 
-      const values = labels.map(label => data[label] || 0);
+      // Her bucket için iki API'den gelen veriyi topla
+      const combinedValues = labels.map(label => 
+        (openData[label] || 0) + (delayedData[label] || 0)
+      );
 
       const config = {
         type: 'bar',
@@ -1082,7 +1088,7 @@ function loadLeadActionAgeChart() {
           labels,
           datasets: [{
             label: 'Number of Actions',
-            data: values,
+            data: combinedValues,
             backgroundColor: backgroundColors,
             borderRadius: 6
           }]
@@ -1125,13 +1131,8 @@ function loadLeadActionAgeChart() {
         config
       );
     })
-    .catch(err => console.error('Error loading action age chart:', err));
+    .catch(err => console.error('Error loading combined action age chart:', err));
 }
-
-
-
-
-
 
   </script>
 </body>
