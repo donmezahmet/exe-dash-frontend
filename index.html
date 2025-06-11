@@ -1317,7 +1317,15 @@ async function loadInvestigationScores() {
 async function loadAuditNameStatusTable() {
   try {
     const res = await fetch(`${backendURL}/api/finding-actions-basic`);
-    const data = await res.json();
+const data = await res.json();
+
+// Eğer array değilse hata göster ve çık
+if (!Array.isArray(data)) {
+  console.error('API response is not an array:', data);
+  document.getElementById('auditNameStatusTableContainer').innerHTML = 'Invalid response from server.';
+  return;
+}
+
 
     const container = document.getElementById('auditNameStatusTableContainer');
     container.innerHTML = '';
