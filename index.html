@@ -980,8 +980,8 @@ function loadAuditProgressChart() {
         label: stage,
         data: filteredData.map(() => segmentValue),
         backgroundColor: filteredData.map(d => d.progressLevel > idx ? greenColor : greyColor),
-        stack: 'same',
-   datalabels: {
+stack: 'same',
+datalabels: {
   display: true,
   formatter: function(value, context) {
     return allStages[context.datasetIndex];
@@ -994,11 +994,10 @@ function loadAuditProgressChart() {
   anchor: 'center',
   align: 'center',
   clamp: true
-}
+}, // ✅ ← bu virgül eksikti
+borderRadius: 6,
+borderSkipped: false
 
-        borderRadius: 6,
-        borderSkipped: false
-      }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
