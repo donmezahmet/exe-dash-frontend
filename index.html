@@ -950,12 +950,15 @@ function loadAuditProgressChart() {
       const leads = new Set();
       const years = new Set();
 
-      const filteredData = data.filter(d => {
-        leads.add(d.auditLead);
-        years.add(d.auditYear);
-        return (!selectedLead || d.auditLead === selectedLead) &&
-               (!selectedYear || d.auditYear === selectedYear);
-      });
+    const filteredData = data
+  .filter(d => {
+    leads.add(d.auditLead);
+    years.add(d.auditYear);
+    return (!selectedLead || d.auditLead === selectedLead) &&
+           (!selectedYear || d.auditYear === selectedYear);
+  })
+  .sort((a, b) => b.progressLevel - a.progressLevel);  // 🔥 Tamamlanma seviyesine göre azalan sırala
+
 
       const sortedLeads = Array.from(leads).sort();
       const sortedYears = Array.from(years).sort();
@@ -971,7 +974,7 @@ function loadAuditProgressChart() {
       leadSelect.value = selectedLead;
       yearSelect.value = selectedYear;
 
-      const allStages = ['Planned', 'Fieldwork', 'Pre Closing Meeting', 'Closing Meeting', 'Completed'];
+      const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
       const greenColor = '#27ae60';
       const segmentValue = 1 / allStages.length;
@@ -984,20 +987,23 @@ function loadAuditProgressChart() {
         datalabels: {
           display: true,
           formatter: function (value, context) {
-            const bg = context.dataset.backgroundColor[context.dataIndex];
-            return bg === greenColor ? allStages[context.datasetIndex] : '';
+            return allStages[context.datasetIndex];
           },
           color: function (context) {
             const bg = context.dataset.backgroundColor[context.dataIndex];
             return bg === greyColor ? '#7f8c8d' : '#ffffff';
           },
-          font: { weight: 'normal', size: 10 },
+          font: {
+            weight: 'normal',
+            size: 10 // ↓ burası küçültüldü
+          },
           anchor: 'center',
           align: 'center',
           clamp: true
         },
-        borderRadius: 6,
-        borderSkipped: false
+        borderRadius: 4, // ↓ daha kısa bar görünümü
+        borderSkipped: false,
+        barThickness: 12 // ↓ bar kalınlığı daha ince
       }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
@@ -1019,7 +1025,7 @@ function loadAuditProgressChart() {
             x: { min: 0, max: 1, display: false },
             y: {
               ticks: {
-                font: { size: 13, weight: '500' }
+                font: { size: 12, weight: '500' }
               }
             }
           }
@@ -1028,6 +1034,7 @@ function loadAuditProgressChart() {
       });
     });
 }
+
 
 
 
