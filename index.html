@@ -317,9 +317,44 @@ select[multiple] {
 }
 #projectRiskTableContainer {
   width: 100%;
-  max-height: 400px;  /* sabit yükseklik */
-  overflow-y: auto;   /* dikey scroll */
+  max-height: 400px;
+  overflow-y: auto;
   overflow-x: auto;
+}
+
+#projectRiskTableContainer table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: #1c1f26;
+  color: #e0e6f0;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+}
+
+#projectRiskTableContainer th,
+#projectRiskTableContainer td {
+  padding: 6px 8px;
+  text-align: left;
+  border: 1px solid #2f3640; /* ✅ Hücre çerçeveleri */
+  word-break: break-word;
+   min-height: 10px;
+}
+
+#projectRiskTableContainer th {
+  background-color: #2f3640;
+  font-weight: 600;
+  color: #dcdde1;
+}
+
+#projectRiskTableContainer tr {
+  border-bottom: 1px solid #444; /* ✅ Satır ayraç çizgisi */
+}
+
+#projectRiskTableContainer tr:last-child {
+  font-weight: bold;
+  background-color: #1e272e;
+  border-top: 2px solid #57606f;
 }
 
 
