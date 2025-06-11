@@ -980,24 +980,25 @@ function loadAuditProgressChart() {
         label: stage,
         data: filteredData.map(() => segmentValue),
         backgroundColor: filteredData.map(d => d.progressLevel > idx ? greenColor : greyColor),
-stack: 'same',
-datalabels: {
-  display: true,
-  formatter: function(value, context) {
-    return allStages[context.datasetIndex];
-  },
-  color: function(context) {
-    const bg = context.dataset.backgroundColor[context.dataIndex];
-    return bg === greyColor ? '#7f8c8d' : '#ffffff';
-  },
-  font: { weight: 'normal', size: 10 },
-  anchor: 'center',
-  align: 'center',
-  clamp: true
-}, // ✅ ← bu virgül eksikti
-borderRadius: 6,
-borderSkipped: false
-
+        stack: 'same',
+        datalabels: {
+          display: true,
+          formatter: function (value, context) {
+            const bg = context.dataset.backgroundColor[context.dataIndex];
+            return bg === greenColor ? allStages[context.datasetIndex] : '';
+          },
+          color: function (context) {
+            const bg = context.dataset.backgroundColor[context.dataIndex];
+            return bg === greyColor ? '#7f8c8d' : '#ffffff';
+          },
+          font: { weight: 'normal', size: 10 },
+          anchor: 'center',
+          align: 'center',
+          clamp: true
+        },
+        borderRadius: 6,
+        borderSkipped: false
+      }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
@@ -1027,6 +1028,7 @@ borderSkipped: false
       });
     });
 }
+
 
 
 let leadActionAgeChartInstance = null;
