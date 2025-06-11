@@ -422,9 +422,9 @@ select[multiple] {
   <div class="legend" id="actionLegend"></div>
 </div>
 <div class="card">
-  <h2>Action Status Breakdown by Audit Name</h2>
-  <div id="auditNameStatusTableContainer" style="width: 100%; overflow-x: auto;">
-    <!-- Tablo JS ile buraya eklenecek -->
+  <h2>Finding Actions by Audit Name and Status</h2>
+  <div id="auditNameStatusTableContainer"></div>
+</div>
   </div>
 </div>
 
@@ -1316,29 +1316,40 @@ async function loadInvestigationScores() {
 
 async function loadAuditNameStatusTable() {
   try {
-    const res = await fetch(`${backendURL}/api/finding-actions-by-audit-name`);
+    const res = await fetch(`${backendURL}/api/finding-actions-basic`);
     const data = await res.json();
 
     const container = document.getElementById('auditNameStatusTableContainer');
     container.innerHTML = '';
 
-    // Tüm unique status'ları topla
-    const allStatusesSet = new Set();
-    data.forEach(row => Object.keys(row.statuses).forEach(status => allStatusesSet.add(status)));
+    // ➕ Audit name'lere göre gruplama ve status sayma
+    const grouped = {};
+    const statusSet = new Set();
 
-    const allStatuses = Array.from(allStatusesSet).sort(); // Alfabetik sırala
+    data.forEach(item => {
+      const auditName = item.auditName || 'N/A';
+      const status = item.status || 'Unknown';
+
+      if (!grouped[auditName]) grouped[auditName] = {};
+      if (!grouped[auditName][status]) grouped[auditName][status] = 0;
+      grouped[auditName][status]++;
+
+      statusSet.add(status);
+    });
+
+    const allStatuses = Array.from(statusSet).sort(); // Alfabetik sırala
     const headers = ['Audit Name', ...allStatuses, 'T:'];
 
-    // Tablo başlığı
+    // 🔠 Tablo başlığı
     let html = '<table><thead><tr>';
     headers.forEach(h => html += `<th>${h}</th>`);
     html += '</tr></thead><tbody>';
 
-    data.forEach(row => {
+    Object.entries(grouped).forEach(([auditName, statuses]) => {
       let total = 0;
-      html += `<tr><td>${row.auditName}</td>`;
+      html += `<tr><td>${auditName}</td>`;
       allStatuses.forEach(status => {
-        const count = row.statuses[status] || 0;
+        const count = statuses[status] || 0;
         total += count;
         html += `<td>${count}</td>`;
       });
@@ -1352,6 +1363,7 @@ async function loadAuditNameStatusTable() {
     document.getElementById('auditNameStatusTableContainer').innerHTML = 'Failed to load table.';
   }
 }
+
 
 
 
