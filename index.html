@@ -315,6 +315,13 @@ select[multiple] {
   font-weight: bold;
   color: #2ecc71;
 }
+#projectRiskTableContainer {
+  width: 100%;
+  max-height: 400px;  /* sabit yükseklik */
+  overflow-y: auto;   /* dikey scroll */
+  overflow-x: auto;
+}
+
 
   </style>
 </head>
@@ -413,9 +420,8 @@ select[multiple] {
 
 <div class="card">
   <h2>Risk Level Distribution by Audit Project</h2>
-  <div id="projectRiskTableContainer"></div>
+  <canvas id="projectRiskChart"></canvas>
 </div>
-
 
 <div class="card">
   <h2>Investigations by Year</h2>
@@ -1224,37 +1230,39 @@ async function loadProjectRiskChart() {
 
 
 
-function loadInvestigationScoreCards() {
-  fetch(`${backendURL}/api/investigation-counts`)
-    .then(res => res.json())
-    .then(data => {
-      const container = document.getElementById('investigationScoreCards');
-      container.innerHTML = '';
+async function loadProjectRiskChart() {
+  try {
+    const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const data = await response.json();
 
-      const yearMap = {};
+    const container = document.getElementById('projectRiskTableContainer');
+    const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
+    const headers = ['Audit Project', ...riskLevels, 'T:'];
 
-      // Yılları grupla
-      data.forEach(item => {
-        if (!item.year) return;
-        const year = item.year;
-        yearMap[year] = (yearMap[year] || 0) + (item.count || 0);
+    let html = '<table><thead><tr>';
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+
+    data.forEach(row => {
+      html += '<tr>';
+      html += `<td>${row.project}</td>`;
+
+      let total = 0;
+      riskLevels.forEach(level => {
+        const count = row[level] || 0;
+        total += count;
+        html += `<td>${count}</td>`;
       });
 
-      // Score card oluştur
-      Object.entries(yearMap)
-        .sort((a, b) => b[0] - a[0]) // Yıla göre büyükten küçüğe sırala
-        .forEach(([year, count]) => {
-          const card = document.createElement('div');
-          card.className = 'score-card';
-          card.innerHTML = `
-            <h3>${year}</h3>
-            <p>Investigations</p>
-            <div class="count">${count}</div>
-          `;
-          container.appendChild(card);
-        });
-    })
-    .catch(err => console.error('Failed to load investigation score cards:', err));
+      html += `<td>${total}</td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Failed to load project risk table:', error);
+  }
 }
 
 
