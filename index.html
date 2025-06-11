@@ -391,8 +391,6 @@ select[multiple] {
   border-top: 2px solid #57606f;
 }
 
-
-
   </style>
 </head>
 <body>
@@ -405,114 +403,119 @@ select[multiple] {
     <ul id="detailList"></ul>
   </div>
 
-  <div class="container">
-    <!-- Üçlü Kart Satırı -->
-    <div class="row">
-      <div class="card">
-<h2>Audit Findings by Year and Status</h2>
-<div class="filter-row">
-  <div class="filter-group">
-    <label for="auditTypeSelect">Audit Type:</label>
-    <select id="auditTypeSelect" multiple onchange="reloadBarChart()">
-      <option value="">All Types</option>
-    </select>
-  </div>
-  <div class="filter-group">
-    <label for="auditCountrySelect">Country:</label>
-    <select id="auditCountrySelect" multiple onchange="reloadBarChart()">
-      <option value="">All Countries</option>
-    </select>
-  </div>
-</div>
-<canvas id="statusChart"></canvas>
-      </div>
-
-      <div class="card">
-   <h2>Audit Findings - Status Distribution</h2>
-<div style="align-self: flex-end; margin-bottom: 10px;">
-  <label for="auditTypeSelectPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-  <select id="auditTypeSelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-    <option value="">All Types</option>
-  </select>
-  <label for="auditCountrySelectPie" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-  <select id="auditCountrySelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-    <option value="">All Countries</option>
-  </select>
-</div>
-
-
-        <canvas id="statusPie"></canvas>
-        <div class="legend" id="statusLegend"></div>
-      </div>
-  <div class="card">
-  <h2>Finding Actions - Status Distribution</h2>
-  <div style="align-self: flex-end; margin-bottom: 10px;">
-    <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-
-    <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Types</option>
-    </select>
-  </div>
-  <canvas id="actionPie"></canvas>
-  <div class="legend" id="actionLegend"></div>
-</div>
-<div class="card">
-  <h2>Finding Actions by Audit Name and Status</h2>
-    <div id="auditNameStatusTableContainer" style="max-height: 400px; overflow-y: auto;"></div>
-</div>
-
-  </div>
-</div>
-
-
-<!-- ✅ Yeni chart burada başlıyor -->
-<!-- ✅ Yeni chart burada başlıyor -->
+   <!-- Tüm dashboard içeriği için tek bir container -->
+  <!-- ROW 1 -->
+<!-- ROW 1 -->
+<br>
+<!-- ROW 1 -->
 <div class="row">
+  <!-- 1 -->
+  <div class="card">
+    <h2>Audit Findings by Year and Status</h2>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label for="auditTypeSelect">Audit Type:</label>
+        <select id="auditTypeSelect" multiple onchange="reloadBarChart()">
+          <option value="">All Types</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="auditCountrySelect">Country:</label>
+        <select id="auditCountrySelect" multiple onchange="reloadBarChart()">
+          <option value="">All Countries</option>
+        </select>
+      </div>
+    </div>
+    <canvas id="statusChart"></canvas>
+  </div>
+
+  <!-- 2 -->
+  <div class="card">
+    <h2>Finding Actions - Status Distribution</h2>
+    <div style="align-self: flex-end; margin-bottom: 10px;">
+      <label for="auditTypeSelectActionPie">Filter:</label>
+      <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()">
+        <option value="">All Types</option>
+      </select>
+    </div>
+    <canvas id="actionPie"></canvas>
+    <div class="legend" id="actionLegend"></div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card">
+    <h2>Finding Actions by Audit Name and Status</h2>
+    <div id="auditNameStatusTableContainer" style="max-height: 400px; overflow-y: auto;"></div>
+  </div>
+</div>
+<br>
+
+<!-- ROW 2 -->
+<div class="row">
+  <!-- 4 -->
+  <div class="card">
+    <h2>Audit Findings - Status Distribution</h2>
+    <div style="align-self: flex-end; margin-bottom: 10px;">
+      <label for="auditTypeSelectPie">Filter:</label>
+      <select id="auditTypeSelectPie" onchange="reloadPieChart()">
+        <option value="">All Types</option>
+      </select>
+      <label for="auditCountrySelectPie" style="margin-left: 20px;">Country:</label>
+      <select id="auditCountrySelectPie" onchange="reloadPieChart()">
+        <option value="">All Countries</option>
+      </select>
+    </div>
+    <canvas id="statusPie"></canvas>
+    <div class="legend" id="statusLegend"></div>
+  </div>
+
+  <!-- 5 -->
   <div class="card">
     <h2>Finding Actions by Lead and Status</h2>
     <canvas id="leadStatusChart"></canvas>
   </div>
 
+  <!-- 6 -->
   <div class="card">
     <h2>Audit Plan - Progress Tracker</h2>
     <div style="align-self: flex-end; margin-bottom: 10px;">
-      <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-      <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <label for="auditLeadSelect">Audit Lead:</label>
+      <select id="auditLeadSelect" onchange="loadAuditProgressChart()">
         <option value="">All Leads</option>
       </select>
-
-      <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
-      <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <label for="auditYearSelect" style="margin-left: 20px;">Audit Year:</label>
+      <select id="auditYearSelect" onchange="loadAuditProgressChart()">
         <option value="">All Years</option>
       </select>
     </div>
     <canvas id="auditProgressChart" style="height: 900px;"></canvas>
   </div>
+</div>
 
+<br>
+<!-- ROW 3 -->
+<div class="row">
   <div class="card">
     <h2>Finding Actions Aging</h2>
     <div style="align-self: flex-end; margin-bottom: 10px;">
-      <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-      <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <label for="auditLeadSelectAge">Audit Lead:</label>
+      <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()">
         <option value="">All Leads</option>
       </select>
     </div>
     <canvas id="leadActionAgeChart"></canvas>
   </div>
-
   <div class="card">
     <h2>Risk Level Distribution by Audit Project</h2>
     <div id="projectRiskTableContainer"></div>
   </div>
-
   <div class="card">
     <h2>Investigations by Year</h2>
     <div class="score-card-container" id="investigationScoreCards"></div>
   </div>
 </div>
-<!-- ✅ Yeni chart burada bitti -->
-
-<!-- Çift tablo satırı -->
+<br>
+<!-- ROW 4 -->
 <div class="row">
   <div class="card">
     <h2>Two Dimensional Filter Statistics: Internal Control</h2>
@@ -522,6 +525,7 @@ select[multiple] {
     <h2>Two Dimensional Filter Statistics: Risk Type</h2>
     <div id="typeRiskTableContainer"></div>
   </div>
+  <div class="card"></div> <!-- Boş kutu hizalama için -->
 </div>
 
 
