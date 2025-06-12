@@ -530,6 +530,10 @@ select[multiple] {
   <h2>Risk Level Distribution by Audit Project</h2>
 <div id="projectRiskTableContainer"></div>
 </div>
+<div class="card">
+  <h2>Unique Audit Projects by Year</h2>
+  <div class="score-card-container" id="auditProjectScoreCards"></div>
+</div>
 
 <div class="card">
   <h2>Investigations by Year</h2>
@@ -727,6 +731,7 @@ window.onload = () => {
    loadInvestigationScores();
    loadAuditNameStatusTable();
   loadProjectRiskChart();
+  loadAuditProjectScoreCards();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 };
 
@@ -1417,6 +1422,42 @@ async function loadInvestigationScores() {
     console.error("Failed to load investigation scores:", error);
   }
 }
+
+async function loadAuditProjectScoreCards() {
+  try {
+    const res = await fetch(`${backendURL}/api/audit-project-counts`);
+    const data = await res.json();
+
+    const container = document.getElementById('auditProjectScoreCards');
+    container.innerHTML = '';
+
+    const grouped = {};
+
+    data.forEach(item => {
+      if (!grouped[item.year]) grouped[item.year] = new Set();
+      grouped[item.year].add(item.name);
+    });
+
+    const years = Object.keys(grouped).sort().reverse();
+
+    years.forEach(year => {
+      const card = document.createElement('div');
+      card.className = 'score-card';
+
+      card.innerHTML = `
+        <p>Unique Audit Projects</p>
+        <h3>${year}</h3>
+        <div class="count">${grouped[year].size}</div>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Failed to load audit project scorecards:", error);
+  }
+}
+
 
 
 
