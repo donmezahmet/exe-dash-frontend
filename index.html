@@ -413,7 +413,6 @@ select[multiple] {
   <h2>Finding Actions - Status Distribution</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditTypeSelectActionPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-
     <select id="auditTypeSelectActionPie" onchange="reloadActionPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
       <option value="">All Types</option>
     </select>
@@ -421,6 +420,11 @@ select[multiple] {
   <canvas id="actionPie"></canvas>
   <div class="legend" id="actionLegend"></div>
 </div>
+<div class="card">
+  <h2>Finding Actions by Audit Name and Status</h2>
+  <div id="auditNameStatusTableContainer"></div>
+</div>
+
 
 <!-- ✅ Yeni chart burada başlıyor -->
 <div class="card">
@@ -652,6 +656,7 @@ window.onload = () => {
   loadAuditProgressChart();
   loadLeadActionAgeChart();
    loadInvestigationScores();
+   loadAuditNameStatusTable();
   loadProjectRiskChart();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 };
@@ -1267,6 +1272,45 @@ async function loadProjectRiskChart() {
     console.error('Failed to load project risk table:', error);
   }
 }
+
+async function loadAuditNameStatusTable() {
+  try {
+    const response = await fetch(`${backendURL}/api/finding-actions-by-audit-name-and-status`);
+    const data = await response.json();
+
+    const container = document.getElementById('auditNameStatusTableContainer');
+    const allStatuses = new Set();
+
+    // Tüm unique status'ları topla
+    Object.values(data).forEach(statusCounts => {
+      Object.keys(statusCounts).forEach(status => allStatuses.add(status));
+    });
+
+    const sortedStatuses = Array.from(allStatuses).sort();
+    const headers = ['Audit Name', ...sortedStatuses, 'T:'];
+
+    let html = '<table><thead><tr>';
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+
+    Object.entries(data).forEach(([auditName, statusCounts]) => {
+      let total = 0;
+      html += `<tr><td>${auditName}</td>`;
+      sortedStatuses.forEach(status => {
+        const count = statusCounts[status] || 0;
+        html += `<td>${count}</td>`;
+        total += count;
+      });
+      html += `<td>${total}</td></tr>`;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Failed to load audit name status table:', error);
+  }
+}
+
 
 
 async function loadInvestigationScores() {
