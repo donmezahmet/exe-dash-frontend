@@ -1425,16 +1425,22 @@ async function loadInvestigationScores() {
 
 async function loadAuditProjectScoreCards() {
   try {
-  const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
+    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
     const data = await res.json();
+
     const container = document.getElementById('auditProjectScoreCards');
     container.innerHTML = '';
-    const grouped = {};
-    data.forEach(item => {
-  if (!grouped[item.year]) grouped[item.year] = new Set();
-  item.names.forEach(name => grouped[item.year].add(name));
-});
 
+    // year -> Set of unique project names
+    const grouped = {};
+
+    data.forEach(item => {
+      const year = item.year || 'Unknown';
+      const project = item.project || 'Unnamed';
+
+      if (!grouped[year]) grouped[year] = new Set();
+      grouped[year].add(project);
+    });
 
     const years = Object.keys(grouped).sort().reverse();
 
