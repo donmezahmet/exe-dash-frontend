@@ -357,6 +357,62 @@ select[multiple] {
   border-top: 2px solid #57606f;
 }
 
+#auditNameStatusTableContainer {
+  width: 100%;
+  height: 400px; /* max-height yerine sabit height */
+  overflow-y: auto;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+#auditNameStatusTableContainer table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: #1c1f26;
+  color: #e0e6f0;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+}
+
+#auditNameStatusTableContainer th,
+#auditNameStatusTableContainer td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid #2f3640;
+  word-break: break-word;
+  min-width: 80px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#auditNameStatusTableContainer td:first-child,
+#auditNameStatusTableContainer th:first-child {
+  text-align: left;
+  min-width: 200px;
+  max-width: 240px;
+}
+
+#auditNameStatusTableContainer th {
+  background-color: #2f3640;
+  font-weight: 600;
+  color: #dcdde1;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+#auditNameStatusTableContainer tr {
+  border-bottom: 1px solid #444;
+}
+
+#auditNameStatusTableContainer tr:last-child {
+  font-weight: bold;
+  background-color: #1e272e;
+  border-top: 2px solid #57606f;
+}
+
 
   </style>
 </head>
@@ -404,8 +460,6 @@ select[multiple] {
     <option value="">All Countries</option>
   </select>
 </div>
-
-
         <canvas id="statusPie"></canvas>
         <div class="legend" id="statusLegend"></div>
       </div>
@@ -424,6 +478,7 @@ select[multiple] {
   <h2>Finding Actions by Audit Name and Status</h2>
   <div id="auditNameStatusTableContainer"></div>
 </div>
+
 
 
 <!-- ✅ Yeni chart burada başlıyor -->
