@@ -1397,6 +1397,14 @@ async function loadInvestigationScores() {
     container.innerHTML = '';
 
     const grouped = {};
+    const auditorCountPerYear = {
+      "2020": 2,
+      "2021": 7.25,
+      "2022": 15.83,
+      "2023": 15.17,
+      "2024": 9.08,
+      "2025": 2.62
+    };
 
     data.forEach(item => {
       if (!grouped[item.year]) grouped[item.year] = 0;
@@ -1406,13 +1414,17 @@ async function loadInvestigationScores() {
     const years = Object.keys(grouped).sort().reverse();
 
     years.forEach(year => {
+      const total = grouped[year];
+      const auditors = auditorCountPerYear[year] || 1;
+      const perAuditor = (total / auditors).toFixed(2);
+
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
-        <p>Investigation Count</p>
         <h3>${year}</h3>
-        <div class="count">${grouped[year]}</div>
+        <div class="count">${total}</div>
+        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${perAuditor} per auditor</p>
       `;
 
       container.appendChild(card);
@@ -1423,6 +1435,7 @@ async function loadInvestigationScores() {
   }
 }
 
+
 async function loadAuditProjectScoreCards() {
   try {
     const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
@@ -1431,8 +1444,16 @@ async function loadAuditProjectScoreCards() {
     const container = document.getElementById('auditProjectScoreCards');
     container.innerHTML = '';
 
-    // year -> Set of unique project names
+    // Yıl -> Proje seti
     const grouped = {};
+    const auditorCountPerYear = {
+      "2020": 2,
+      "2021": 7.25,
+      "2022": 15.83,
+      "2023": 15.17,
+      "2024": 9.08,
+      "2025": 2.62
+    };
 
     data.forEach(item => {
       const year = item.year || 'Unknown';
@@ -1445,13 +1466,17 @@ async function loadAuditProjectScoreCards() {
     const years = Object.keys(grouped).sort().reverse();
 
     years.forEach(year => {
+      const totalProjects = grouped[year].size;
+      const auditors = auditorCountPerYear[year] || 1;
+      const perAuditor = (totalProjects / auditors).toFixed(2);
+
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
-        <p>Unique Audit Projects</p>
         <h3>${year}</h3>
-        <div class="count">${grouped[year].size}</div>
+        <div class="count">${totalProjects}</div>
+        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${perAuditor} per auditor</p>
       `;
 
       container.appendChild(card);
@@ -1461,6 +1486,7 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
+
 
 
 
