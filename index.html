@@ -1425,7 +1425,8 @@ async function loadInvestigationScores() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/audit-project-counts`);
+  const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
+
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
