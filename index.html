@@ -1356,22 +1356,26 @@ async function loadAuditNameStatusTable() {
     const allStatuses = new Set();
 
     // Tüm unique status'ları topla
-    Object.values(data).forEach(statusCounts => {
-      Object.keys(statusCounts).forEach(status => allStatuses.add(status));
+    data.forEach(row => {
+      Object.keys(row).forEach(key => {
+        if (!['auditName', 'auditYear'].includes(key)) {
+          allStatuses.add(key);
+        }
+      });
     });
 
     const sortedStatuses = Array.from(allStatuses).sort();
-    const headers = ['Audit Name', ...sortedStatuses, 'T:'];
+    const headers = ['Audit Name', 'Audit Year', ...sortedStatuses, 'T:'];
 
     let html = '<table><thead><tr>';
     headers.forEach(h => html += `<th>${h}</th>`);
     html += '</tr></thead><tbody>';
 
-    Object.entries(data).forEach(([auditName, statusCounts]) => {
+    data.forEach(row => {
       let total = 0;
-      html += `<tr><td>${auditName}</td>`;
+      html += `<tr><td>${row.auditName}</td><td>${row.auditYear}</td>`;
       sortedStatuses.forEach(status => {
-        const count = statusCounts[status] || 0;
+        const count = row[status] || 0;
         html += `<td>${count}</td>`;
         total += count;
       });
@@ -1384,6 +1388,7 @@ async function loadAuditNameStatusTable() {
     console.error('Failed to load audit name status table:', error);
   }
 }
+
 
 
 
