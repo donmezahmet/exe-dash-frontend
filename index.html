@@ -1373,7 +1373,8 @@ async function loadAuditNameStatusTable() {
 
     data.forEach(row => {
       let total = 0;
-      html += `<tr><td>${row.auditName}</td><td>${row.auditYear}</td>`;
+const year = typeof row.auditYear === 'object' ? row.auditYear?.value || 'Unknown' : row.auditYear || 'Unknown';
+html += `<tr><td>${row.auditName}</td><td>${year}</td>`;
       sortedStatuses.forEach(status => {
         const count = row[status] || 0;
         html += `<td>${count}</td>`;
