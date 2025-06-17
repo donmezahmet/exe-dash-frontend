@@ -1447,7 +1447,7 @@ async function loadInvestigationScores() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
+    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
@@ -1462,16 +1462,29 @@ async function loadAuditProjectScoreCards() {
       "2025": 2.62
     };
 
-    data.forEach(({ year, count }) => {
+    // Yıla göre filtrelenmiş audit count
+    const countsPerYear = {};
+
+    data.forEach(item => {
+      const year = item.year || 'Unknown';
+
+      if (!countsPerYear[year]) countsPerYear[year] = 0;
+      countsPerYear[year]++;
+    });
+
+    const years = Object.keys(countsPerYear).sort().reverse();
+
+    years.forEach(year => {
+      const totalProjects = countsPerYear[year];
       const auditors = auditorCountPerYear[year] || 1;
-      const perAuditor = (count / auditors).toFixed(2);
+      const perAuditor = (totalProjects / auditors).toFixed(2);
 
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
         <h3>${year}</h3>
-        <div class="count">${count}</div>
+        <div class="count">${totalProjects}</div>
         <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${perAuditor} per auditor</p>
       `;
 
