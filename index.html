@@ -501,20 +501,25 @@ select[multiple] {
   <canvas id="leadStatusChart"></canvas>
 </div>
 <div class="card">
-  <h2> Audit Plan - Progress Tracker</h2>
-  <div style="align-self: flex-end; margin-bottom: 10px;">
-    <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Leads</option>
-    </select>
+  <h2>Audit Plan - Progress Tracker</h2>
 
-    <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
-    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-      <option value="">All Years</option>
-    </select>
-  </div>
- <canvas id="auditProgressChart" style="height: 900px;"></canvas>
+<div style="align-self: flex-end; margin-bottom: 10px;">
+  <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+  <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+    <option value="">All Leads</option>
+  </select>
+
+  <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
+  <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+    <option value="">All Years</option>
+  </select>
 </div>
+
+<!-- 🔧 Scrollable Wrapper Eklendi -->
+<div id="auditProgressChartWrapper" style="max-height: 600px; overflow-y: auto; padding-right: 8px;">
+  <canvas id="auditProgressChart" style="height: 1000px;"></canvas>
+</div>
+
 <div class="card">
   <h2>Finding Actions Aging</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
