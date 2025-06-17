@@ -516,8 +516,13 @@ select[multiple] {
       <option value="">All Years</option>
     </select>
   </div>
- <canvas id="auditProgressChart" style="height: 900px;"></canvas>
+
+  <!-- 🔽 Scroll alanı burada başlıyor -->
+  <div id="auditProgressWrapper" style="max-height: 550px; overflow-y: auto; overflow-x: hidden;">
+    <canvas id="auditProgressChart" style="height: auto;"></canvas>
+  </div>
 </div>
+
 <div class="card">
   <h2>Finding Actions Aging</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
