@@ -546,11 +546,11 @@ select[multiple] {
 
      <div class="row">
       <div class="card">
-        <h2>Two Dimensional Filter Statistics: Internal Control</h2>
+        <h2>Internal Control</h2>
         <div id="controlRiskTableContainer"></div>
       </div>
       <div class="card">
-        <h2>Two Dimensional Filter Statistics: Risk Type</h2>
+        <h2>Risk Type</h2>
         <div id="typeRiskTableContainer"></div>
       </div>
 
@@ -1453,7 +1453,7 @@ async function loadAuditProjectScoreCards() {
     const container = document.getElementById('auditProjectScoreCards');
     container.innerHTML = '';
 
-    // Yıl -> Proje seti
+    // Yıl -> (Yıl+Proje) seti
     const grouped = {};
     const auditorCountPerYear = {
       "2020": 2,
@@ -1467,9 +1467,10 @@ async function loadAuditProjectScoreCards() {
     data.forEach(item => {
       const year = item.year || 'Unknown';
       const project = item.project || 'Unnamed';
+      const uniqueKey = `${project}___${year}`;  // Yıl + Proje kombinasyonu
 
       if (!grouped[year]) grouped[year] = new Set();
-      grouped[year].add(project);
+      grouped[year].add(uniqueKey);
     });
 
     const years = Object.keys(grouped).sort().reverse();
@@ -1495,6 +1496,7 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
+
 
 
 
