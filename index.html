@@ -1447,14 +1447,12 @@ async function loadInvestigationScores() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
     container.innerHTML = '';
 
-    // Yıl -> (Yıl+Proje) seti
-    const grouped = {};
     const auditorCountPerYear = {
       "2020": 2,
       "2021": 7.25,
@@ -1464,28 +1462,16 @@ async function loadAuditProjectScoreCards() {
       "2025": 2.62
     };
 
-    data.forEach(item => {
-      const year = item.year || 'Unknown';
-      const project = item.project || 'Unnamed';
-      const uniqueKey = `${project}___${year}`;  // Yıl + Proje kombinasyonu
-
-      if (!grouped[year]) grouped[year] = new Set();
-      grouped[year].add(uniqueKey);
-    });
-
-    const years = Object.keys(grouped).sort().reverse();
-
-    years.forEach(year => {
-      const totalProjects = grouped[year].size;
+    data.forEach(({ year, count }) => {
       const auditors = auditorCountPerYear[year] || 1;
-      const perAuditor = (totalProjects / auditors).toFixed(2);
+      const perAuditor = (count / auditors).toFixed(2);
 
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
         <h3>${year}</h3>
-        <div class="count">${totalProjects}</div>
+        <div class="count">${count}</div>
         <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${perAuditor} per auditor</p>
       `;
 
@@ -1496,11 +1482,6 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
-
-
-
-
-
 
   </script>
 </body>
