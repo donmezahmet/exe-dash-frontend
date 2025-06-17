@@ -412,6 +412,11 @@ select[multiple] {
   border-top: 2px solid #57606f;
 }
 
+#auditProgressChart {
+  display: block;
+  max-height: 500px;
+  overflow-y: auto;
+}
 
 
 
@@ -489,8 +494,6 @@ select[multiple] {
 
   </div>
 </div>
-
-
 
 
 
@@ -1146,7 +1149,8 @@ function loadAuditProgressChart() {
         sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
 
       leadSelect.value = selectedLead;
-      yearSelect.value = selectedYear;
+   // Eğer kullanıcı bir seçim yapmadıysa varsayılan yıl 2025 olsun
+yearSelect.value = selectedYear || '2025';
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
