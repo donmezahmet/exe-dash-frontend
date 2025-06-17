@@ -1118,8 +1118,11 @@ function loadActionPieChart() {
 let auditProgressChartInstance = null;
 
 function loadAuditProgressChart() {
-  const selectedLead = document.getElementById('auditLeadSelect')?.value;
-  const selectedYear = document.getElementById('auditYearSelect')?.value;
+  let selectedLead = document.getElementById('auditLeadSelect')?.value;
+  let selectedYear = document.getElementById('auditYearSelect')?.value;
+
+  // Eğer kullanıcı bir yıl seçmemişse varsayılan olarak 2025 ata
+  if (!selectedYear) selectedYear = '2025';
 
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
@@ -1127,15 +1130,14 @@ function loadAuditProgressChart() {
       const leads = new Set();
       const years = new Set();
 
-    const filteredData = data
-  .filter(d => {
-    leads.add(d.auditLead);
-    years.add(d.auditYear);
-    return (!selectedLead || d.auditLead === selectedLead) &&
-           (!selectedYear || d.auditYear === selectedYear);
-  })
-  .sort((a, b) => b.progressLevel - a.progressLevel);  // 🔥 Tamamlanma seviyesine göre azalan sırala
-
+      const filteredData = data
+        .filter(d => {
+          leads.add(d.auditLead);
+          years.add(d.auditYear);
+          return (!selectedLead || d.auditLead === selectedLead) &&
+                 (!selectedYear || d.auditYear === selectedYear);
+        })
+        .sort((a, b) => b.progressLevel - a.progressLevel);
 
       const sortedLeads = Array.from(leads).sort();
       const sortedYears = Array.from(years).sort();
@@ -1148,9 +1150,9 @@ function loadAuditProgressChart() {
       yearSelect.innerHTML = '<option value="">All Years</option>' +
         sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
 
+      // Kullanıcının seçimini dropdown'a geri yükle
       leadSelect.value = selectedLead;
-   // Eğer kullanıcı bir seçim yapmadıysa varsayılan yıl 2025 olsun
-yearSelect.value = selectedYear || '2025';
+      yearSelect.value = selectedYear;
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
@@ -1173,15 +1175,15 @@ yearSelect.value = selectedYear || '2025';
           },
           font: {
             weight: 'normal',
-            size: 10 // ↓ burası küçültüldü
+            size: 10
           },
           anchor: 'center',
           align: 'center',
           clamp: true
         },
-        borderRadius: 4, // ↓ daha kısa bar görünümü
+        borderRadius: 4,
         borderSkipped: false,
-        barThickness: 12 // ↓ bar kalınlığı daha ince
+        barThickness: 12
       }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
