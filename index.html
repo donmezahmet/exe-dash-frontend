@@ -1116,13 +1116,16 @@ function loadActionPieChart() {
 }
 
 let auditProgressChartInstance = null;
+let auditProgressDropdownsInitialized = false; // ✅ Bir kere initialize edildi mi diye kontrol için
 
 function loadAuditProgressChart() {
   let selectedLead = document.getElementById('auditLeadSelect')?.value;
   let selectedYear = document.getElementById('auditYearSelect')?.value;
 
-  // Eğer kullanıcı bir yıl seçmemişse varsayılan olarak 2025 ata
-  if (!selectedYear) selectedYear = '2025';
+  // Sadece ilk yüklemede yıl boşsa 2025 yap
+  if (!selectedYear && !auditProgressDropdownsInitialized) {
+    selectedYear = '2025';
+  }
 
   fetch(`${backendURL}/api/yearly-audit-plan`)
     .then(res => res.json())
@@ -1145,14 +1148,18 @@ function loadAuditProgressChart() {
       const leadSelect = document.getElementById('auditLeadSelect');
       const yearSelect = document.getElementById('auditYearSelect');
 
-      leadSelect.innerHTML = '<option value="">All Leads</option>' +
-        sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
-      yearSelect.innerHTML = '<option value="">All Years</option>' +
-        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+      // 🔁 Dropdown'ları sadece ilk kez oluştur
+      if (!auditProgressDropdownsInitialized) {
+        leadSelect.innerHTML = '<option value="">All Leads</option>' +
+          sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+        yearSelect.innerHTML = '<option value="">All Years</option>' +
+          sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
 
-      // Kullanıcının seçimini dropdown'a geri yükle
-      leadSelect.value = selectedLead;
-      yearSelect.value = selectedYear;
+        leadSelect.value = selectedLead;
+        yearSelect.value = selectedYear;
+
+        auditProgressDropdownsInitialized = true; // ✅ Artık yeniden initialize etme
+      }
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
