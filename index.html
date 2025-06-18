@@ -423,8 +423,13 @@ select[multiple] {
 #auditProgressChart {
   width: 100% !important;
   height: auto !important;
-  min-height: 800px !important; /* Ne kadar uzunlukta gösterilmesini istiyorsan artır */
+  min-height: 600px !important; /* Ne kadar uzunlukta gösterilmesini istiyorsan artır */
 }
+.card-full {
+  max-width: 70% !important;
+  flex: 1 1 100% !important;
+}
+
 
 
   </style>
@@ -510,7 +515,7 @@ select[multiple] {
   <h2>Finding Actions by Lead and Status</h2>
   <canvas id="leadStatusChart"></canvas>
 </div>
-<div class="card">
+<div class="card card-full">
   <h2>Audit Plan - Progress Tracker</h2>
   <div style="align-self: flex-end; margin-bottom: 10px;">
     <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
@@ -1199,14 +1204,25 @@ function loadAuditProgressChart() {
         },
         borderRadius: 4,
         borderSkipped: false,
-        barThickness: 12
+       barThickness: 18,
+categoryPercentage: 0.8,
+barPercentage: 0.9
+
       }));
 
       // ✅ Çözünürlüğü artır — bulanıklığı engelle
-    const canvas = document.getElementById('auditProgressChart');
-const rowHeight = 36; // Her satır için yükseklik
-const width = 1000;
+const canvas = document.getElementById('auditProgressChart');
+let rowHeight = 40;
+if (!selectedYear) {
+  rowHeight = 52; // All Years seçiliyse satırlar daha ayrık olsun
+}
 const height = filteredData.length * rowHeight;
+
+
+const wrapperWidth = document.getElementById('auditProgressChartWrapper').offsetWidth;
+const width = Math.max(wrapperWidth, 1000); // Minimum 1000px olacak şekilde esnek
+
+
 
 const ratio = window.devicePixelRatio || 1;
 canvas.width = width * ratio;
