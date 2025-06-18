@@ -412,14 +412,18 @@ select[multiple] {
   border-top: 2px solid #57606f;
 }
 
-#auditProgressChart {
-  display: block;
+#auditProgressChartWrapper {
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  padding-right: 10px; /* Scroll çubuğu için boşluk bırak */
 }
 
-#auditProgressWrapper canvas {
-  font-size: 12px !important;
+#auditProgressChart {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 800px !important; /* Ne kadar uzunlukta gösterilmesini istiyorsan artır */
 }
 
 
@@ -508,24 +512,24 @@ select[multiple] {
 </div>
 <div class="card">
   <h2>Audit Plan - Progress Tracker</h2>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+    <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Leads</option>
+    </select>
 
-<div style="align-self: flex-end; margin-bottom: 10px;">
-  <label for="auditLeadSelect" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-  <select id="auditLeadSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-    <option value="">All Leads</option>
-  </select>
+    <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
+    <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Years</option>
+    </select>
+  </div>
 
-  <label for="auditYearSelect" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Audit Year:</label>
-  <select id="auditYearSelect" onchange="loadAuditProgressChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-    <option value="">All Years</option>
-  </select>
+  <!-- ✅ SCROLLABLE CHART WRAPPER -->
+  <div id="auditProgressChartWrapper">
+   <canvas id="auditProgressChart" width="1000" height="2000"></canvas>
+  </div>
 </div>
 
-<!-- ✅ Scrollable Container -->
-<div style="max-height: 550px; overflow-y: auto;">
-  <canvas id="auditProgressChart" style="height: 1000px;"></canvas>
-</div>
-</div>
 
 <div class="card">
   <h2>Finding Actions Aging</h2>
@@ -1125,14 +1129,16 @@ function loadActionPieChart() {
 }
 
 let auditProgressChartInstance = null;
-let auditProgressDropdownsInitialized = false;
 
 function loadAuditProgressChart() {
   let selectedLead = document.getElementById('auditLeadSelect')?.value;
   let selectedYear = document.getElementById('auditYearSelect')?.value;
 
-  if (!selectedYear && !auditProgressDropdownsInitialized) {
+  const firstLoad = !document.getElementById('auditYearSelect').dataset.initialized;
+
+  if (firstLoad) {
     selectedYear = '2025';
+    document.getElementById('auditYearSelect').dataset.initialized = 'true';
   }
 
   fetch(`${backendURL}/api/yearly-audit-plan`)
@@ -1156,17 +1162,13 @@ function loadAuditProgressChart() {
       const leadSelect = document.getElementById('auditLeadSelect');
       const yearSelect = document.getElementById('auditYearSelect');
 
-      if (!auditProgressDropdownsInitialized) {
-        leadSelect.innerHTML = '<option value="">All Leads</option>' +
-          sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
-        yearSelect.innerHTML = '<option value="">All Years</option>' +
-          sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+      leadSelect.innerHTML = '<option value="">All Leads</option>' +
+        sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+      yearSelect.innerHTML = '<option value="">All Years</option>' +
+        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
 
-        leadSelect.value = selectedLead;
-        yearSelect.value = selectedYear;
-
-        auditProgressDropdownsInitialized = true;
-      }
+      leadSelect.value = selectedLead;
+      yearSelect.value = selectedYear;
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
@@ -1189,7 +1191,7 @@ function loadAuditProgressChart() {
           },
           font: {
             weight: 'normal',
-            size: 10
+            size: 8
           },
           anchor: 'center',
           align: 'center',
@@ -1200,7 +1202,22 @@ function loadAuditProgressChart() {
         barThickness: 12
       }));
 
-      const ctx = document.getElementById('auditProgressChart').getContext('2d');
+      // ✅ Çözünürlüğü artır — bulanıklığı engelle
+    const canvas = document.getElementById('auditProgressChart');
+const rowHeight = 36; // Her satır için yükseklik
+const width = 1000;
+const height = filteredData.length * rowHeight;
+
+const ratio = window.devicePixelRatio || 1;
+canvas.width = width * ratio;
+canvas.height = height * ratio;
+canvas.style.width = width + 'px';
+canvas.style.height = height + 'px';
+
+const ctx = canvas.getContext('2d');
+ctx.scale(ratio, ratio);
+
+
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
 
       auditProgressChartInstance = new Chart(ctx, {
@@ -1212,7 +1229,6 @@ function loadAuditProgressChart() {
         options: {
           indexAxis: 'y',
           responsive: true,
-          maintainAspectRatio: false, // ✅ Bu önemli
           plugins: {
             legend: { display: false }
           },
@@ -1220,7 +1236,7 @@ function loadAuditProgressChart() {
             x: { min: 0, max: 1, display: false },
             y: {
               ticks: {
-                font: { size: 12, weight: '500' }
+                font: { size: 8, weight: '400' }
               }
             }
           }
