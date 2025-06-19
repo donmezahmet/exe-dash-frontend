@@ -413,14 +413,15 @@ select[multiple] {
 }
 
 #auditProgressChart {
-  display: block;
-  max-height: 500px;
+  width: 100% !important;
+  height: auto !important;
+}
+
+#auditProgressWrapper {
+  max-height: 550px;
   overflow-y: auto;
 }
 
-#auditProgressWrapper canvas {
-  font-size: 12px !important;
-}
 
 
   </style>
@@ -522,9 +523,11 @@ select[multiple] {
 </div>
 
 <!-- ✅ Scrollable Container -->
-<div style="max-height: 550px; overflow-y: auto;">
-  <canvas id="auditProgressChart" style="height: 1000px;"></canvas>
+<!-- ✅ Scrollable Wrapper -->
+<div id="auditProgressWrapper">
+  <canvas id="auditProgressChart"></canvas>
 </div>
+
 </div>
 
 <div class="card">
@@ -1156,17 +1159,18 @@ function loadAuditProgressChart() {
       const leadSelect = document.getElementById('auditLeadSelect');
       const yearSelect = document.getElementById('auditYearSelect');
 
-      if (!auditProgressDropdownsInitialized) {
-        leadSelect.innerHTML = '<option value="">All Leads</option>' +
-          sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
-        yearSelect.innerHTML = '<option value="">All Years</option>' +
-          sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+if (!auditProgressDropdownsInitialized) {
+  leadSelect.innerHTML = '<option value="">All Leads</option>' +
+    sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
 
-        leadSelect.value = selectedLead;
-        yearSelect.value = selectedYear;
+  // "All Years" seçeneği kaldırıldı:
+  yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
 
-        auditProgressDropdownsInitialized = true;
-      }
+  leadSelect.value = selectedLead;
+  yearSelect.value = selectedYear;
+
+  auditProgressDropdownsInitialized = true;
+}
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
@@ -1201,6 +1205,7 @@ function loadAuditProgressChart() {
       }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
+      
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
 
       auditProgressChartInstance = new Chart(ctx, {
