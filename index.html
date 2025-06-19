@@ -367,49 +367,65 @@ select[multiple] {
 
 #auditNameStatusTableContainer {
   width: 100%;
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: auto;
+  max-height: 600px;
+  overflow-x: auto;         /* yatay scroll burada */
+  overflow-y: auto;         /* dikey scroll burada */
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 #auditNameStatusTableContainer table {
-  width: max-content;
-  min-width: 650px;
+  width: 100%;
   border-collapse: collapse;
-  background-color: #1c1f26;
-  color: #e0e6f0;
   font-family: 'Segoe UI', sans-serif;
   font-size: 12px;
+  color: #2c3e50;
 }
 
 #auditNameStatusTableContainer th,
 #auditNameStatusTableContainer td {
-  padding: 6px 10px;
+  padding: 10px 12px;
   text-align: center;
-  border: 1px solid #2f3640;
-  word-break: break-word;
-}
-#auditNameStatusTableContainer th:first-child,
-#auditNameStatusTableContainer td:first-child {
-  max-width: 180px;
-  width: 180px;
-  text-align: left;
-  white-space: normal;
-  word-break: break-word;
+  border: 1px solid #e1e4e8;
+  line-height: 1.4;
 }
 
-
+/* Başlıklar */
 #auditNameStatusTableContainer th {
-  background-color: #2f3640;
+  background-color: #f2f4f7;
   font-weight: 600;
-  color: #dcdde1;
+  color: #333;
   white-space: nowrap;
 }
 
-#auditNameStatusTableContainer tr:last-child {
-  font-weight: bold;
-  background-color: #1e272e;
-  border-top: 2px solid #57606f;
+/* Tüm veri hücreleri */
+#auditNameStatusTableContainer td {
+  background-color: #ffffff;
+}
+
+/* Alternatif satır rengi */
+#auditNameStatusTableContainer tr:nth-child(even) td {
+  background-color: #f9f9f9;
+}
+
+/* Sadece ilk sütun hücreleri sola hizalanır, başlık dahil değil */
+#auditNameStatusTableContainer td:first-child {
+  text-align: left;
+  max-width: 260px;
+  min-width: 200px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* İlk sütun başlığı ortada kalsın ama genişlik aynı kalsın */
+#auditNameStatusTableContainer th:first-child {
+  max-width: 260px;
+  min-width: 200px;
+  word-break: break-word;
+  white-space: normal;
+  text-align: center;
 }
 
 #auditProgressChart {
@@ -421,6 +437,17 @@ select[multiple] {
   max-height: 550px;
   overflow-y: auto;
 }
+
+/* Scroll dışına taşmasını engelle, margin kalsın */
+.audit-table-wrapper {
+  flex: 2;
+  height: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  margin-top: 36px;
+}
+
+
 
 
 
@@ -492,9 +519,11 @@ select[multiple] {
     </div>
 
     <!-- Tablo Alanı -->
-    <div style="flex: 2; overflow: auto; max-height: 400px;">
-      <div id="auditNameStatusTableContainer"></div>
-    </div>
+    <div class="audit-table-wrapper">
+  <div id="auditNameStatusTableContainer"></div>
+</div>
+
+
 
   </div>
 </div>
@@ -1205,7 +1234,7 @@ if (!auditProgressDropdownsInitialized) {
       }));
 
       const ctx = document.getElementById('auditProgressChart').getContext('2d');
-      
+
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
 
       auditProgressChartInstance = new Chart(ctx, {
@@ -1397,14 +1426,23 @@ async function loadAuditNameStatusTable() {
     const sortedStatuses = Array.from(allStatuses).sort();
     const headers = ['Audit Name', 'Audit Year', ...sortedStatuses, 'T:'];
 
+    // ✅ Audit Year'a göre büyükten küçüğe sırala
+    data.sort((a, b) => {
+      const yearA = typeof a.auditYear === 'object' ? parseInt(a.auditYear?.value) : parseInt(a.auditYear);
+      const yearB = typeof b.auditYear === 'object' ? parseInt(b.auditYear?.value) : parseInt(b.auditYear);
+      if (isNaN(yearA)) return 1;
+      if (isNaN(yearB)) return -1;
+      return yearB - yearA;
+    });
+
     let html = '<table><thead><tr>';
     headers.forEach(h => html += `<th>${h}</th>`);
     html += '</tr></thead><tbody>';
 
     data.forEach(row => {
       let total = 0;
-const year = typeof row.auditYear === 'object' ? row.auditYear?.value || 'Unknown' : row.auditYear || 'Unknown';
-html += `<tr><td>${row.auditName}</td><td>${year}</td>`;
+      const year = typeof row.auditYear === 'object' ? row.auditYear?.value || 'Unknown' : row.auditYear || 'Unknown';
+      html += `<tr><td>${row.auditName}</td><td>${year}</td>`;
       sortedStatuses.forEach(status => {
         const count = row[status] || 0;
         html += `<td>${count}</td>`;
@@ -1419,6 +1457,7 @@ html += `<tr><td>${row.auditName}</td><td>${year}</td>`;
     console.error('Failed to load audit name status table:', error);
   }
 }
+
 
 
 
