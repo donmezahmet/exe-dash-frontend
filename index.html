@@ -1615,7 +1615,7 @@ async function loadInvestigationScores() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
@@ -1630,20 +1630,10 @@ async function loadAuditProjectScoreCards() {
       "2025": 2.46
     };
 
-    // Yıla göre filtrelenmiş audit count
-    const countsPerYear = {};
-
+    // Gelen veri zaten { year, count } formatında olacak
     data.forEach(item => {
       const year = item.year || 'Unknown';
-
-      if (!countsPerYear[year]) countsPerYear[year] = 0;
-      countsPerYear[year]++;
-    });
-
-    const years = Object.keys(countsPerYear).sort().reverse();
-
-    years.forEach(year => {
-      const totalProjects = countsPerYear[year];
+      const totalProjects = item.count;
       const auditors = auditorCountPerYear[year] || 1;
       const perAuditor = (totalProjects / auditors).toFixed(2);
 
@@ -1663,6 +1653,7 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
+
 
   </script>
 </body>
