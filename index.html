@@ -55,6 +55,7 @@ header {
       justify-content: space-between;
       gap: 40px;
       padding: 40px;
+      display: none; /* İlk başta gizli */
     }
 
    .row {
@@ -569,7 +570,20 @@ select[multiple] {
     <span>Audit Findings Executive Dashboard</span>
   </div>
 </header>
-
+<!-- Login Modal -->
+<div id="loginModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:10000;">
+  <div style="background:#fff;padding:30px;border-radius:12px;max-width:320px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <h2 style="margin-top:0;margin-bottom:20px;">Login</h2>
+    <form id="loginForm">
+      <label for="username">Username</label><br>
+      <input type="text" id="username" name="username" required style="width:100%;padding:8px;margin-bottom:15px;"/><br>
+      <label for="password">Password</label><br>
+      <input type="password" id="password" name="password" required style="width:100%;padding:8px;margin-bottom:20px;"/><br>
+      <button type="submit" style="width:100%;padding:10px;background:#5D3EBC;color:#FFD10D;border:none;border-radius:6px;font-size:16px;">Login</button>
+    </form>
+    <p id="loginError" style="color:red;display:none;margin-top:15px;"></p>
+  </div>
+</div>
 
   <!-- Detay Kutusu -->
   <div id="detailBox">
@@ -798,6 +812,42 @@ function loadAuditTypes() {
         });
     });
 }
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const loginErrorEl = document.getElementById('loginError');
+
+  loginErrorEl.style.display = 'none';
+  loginErrorEl.textContent = '';
+
+  try {
+    const res = await fetch(`${backendURL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (res.ok) {
+      // Giriş başarılı
+      document.getElementById('loginModal').style.display = 'none';
+      // Burada istersen dashboardu yüklemeye başla
+      // Örnek: loadAuditTypes(); gibi fonksiyonlar çağrılabilir
+    } else {
+      // Hata mesajı göster
+      const data = await res.json();
+      loginErrorEl.textContent = data.message || 'Invalid username or password';
+      loginErrorEl.style.display = 'block';
+    }
+  } catch (error) {
+    loginErrorEl.textContent = 'Login failed. Try again later.';
+    loginErrorEl.style.display = 'block';
+  }
+});
 
 function reloadBarChart() {
   const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
