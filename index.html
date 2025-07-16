@@ -750,7 +750,10 @@ select[multiple] {
   <h2>Fraud Impact - Global</h2>
   <div id="fraudImpactTableContainer"></div>
 </div>
-
+<div class="card compact-table-card">
+  <h2>Fraud Impact - Turkey</h2>
+  <div id="fraudImpactTableContainer"></div>
+</div>
 
 
   </div> <!-- row -->
@@ -1696,6 +1699,46 @@ async function loadGoogleSheetTable() {
     container.innerHTML = html;
   } catch (err) {
     console.error("Failed to load Google Sheet data:", err);
+  }
+}
+async function loadFraudImpactLocalTable() {
+  try {
+    const response = await fetch('https://exe-dash-backend.onrender.com/api/fraud-impact-local');
+    const data = await response.json();
+
+    const rows = data.result;
+    const container = document.getElementById("fraudImpactLocalTableContainer");
+
+    if (!container) {
+      console.error("fraudImpactLocalTableContainer not found.");
+      return;
+    }
+
+    let html = `
+      <div class="card compact-table-card">
+        <h2>Fraud Impact - Local</h2>
+        <div class="table-wrapper">
+          <table class="compact-table">
+            <thead>
+              <tr>
+                ${rows[0].map(col => `<th>${col}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.slice(1).map(row => `
+                <tr>
+                  ${row.map(col => `<td>${col || ''}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+  } catch (error) {
+    console.error("Failed to load Fraud Impact - Local data:", error);
   }
 }
 
