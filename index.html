@@ -556,29 +556,56 @@ select[multiple] {
   gap: 40px;
   margin-bottom: 40px;
 }
-.compact-table {
+ #fraudImpactTableContainer {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: inline-block;
+}
+
+#fraudImpactTableContainer table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
   font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
   color: #2c3e50;
-  table-layout: auto;
+  table-layout: fixed; /* ✅ Eklendi */
 }
 
-.compact-table th,
-.compact-table td {
-  border: 1px solid #ddd;
-  padding: 6px 8px;
-  text-align: left;
-  vertical-align: top;
+#fraudImpactTableContainer th,
+#fraudImpactTableContainer td {
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+  line-height: 1.4;
 }
 
-.compact-table th {
-  background-color: #f5f5f5;
+#fraudImpactTableContainer th {
+  background-color: #f2f4f7;
   font-weight: 600;
+  color: #333;
+  white-space: nowrap;
 }
 
+#fraudImpactTableContainer td {
+  background-color: #ffffff;
+}
 
+#fraudImpactTableContainer tr:nth-child(even) td {
+  background-color: #f9f9f9;
+}
+
+#fraudImpactTableContainer td:first-child,
+#fraudImpactTableContainer th:first-child {
+  text-align: left;
+  width: 100px; /* ✅ Tek bir width ile sınırlandırıldı */
+  word-break: break-word;
+  white-space: normal;
+}
 
 
   </style>
