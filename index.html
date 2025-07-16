@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Internal Audit Department Executive Dashboard</title>
+  <title>Audit Findings Executive Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <!-- Choices.js CSS -->
@@ -556,6 +556,27 @@ select[multiple] {
   gap: 40px;
   margin-bottom: 40px;
 }
+.compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #2c3e50;
+  table-layout: auto;
+}
+
+.compact-table th,
+.compact-table td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.compact-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
 
 
 
@@ -566,7 +587,7 @@ select[multiple] {
  <header>
   <div class="header-content">
     <img src="logo.png" alt="Logo" class="logo">
-    <span>Internal Audit Department Executive Dashboard</span>
+    <span>Audit Findings Executive Dashboard</span>
   </div>
 </header>
 
@@ -588,7 +609,7 @@ select[multiple] {
     </div>
 
     <div class="card">
-      <h2>Examinations & Investigations by Year</h2>
+      <h2>Investigations by Year</h2>
       <div class="score-card-container" id="investigationScoreCards"></div>
     </div>
   </div>
@@ -697,6 +718,12 @@ select[multiple] {
       <h2>Finding Distribution by Risk Type and Risk Level</h2>
       <div id="typeRiskTableContainer"></div>
     </div>
+
+    <div class="card compact-table-card">
+  <h2>Fraud Impact - Global</h2>
+  <div id="sheetDataTableContainer"></div>
+</div>
+
 
   </div> <!-- row -->
 </div> <!-- container -->
@@ -874,12 +901,14 @@ window.onload = () => {
   loadLeadStatusChart();
   loadAuditProgressChart();
   loadLeadActionAgeChart();
-   loadInvestigationScores();
-   loadAuditNameStatusTable();
+  loadInvestigationScores();
+  loadAuditNameStatusTable();
   loadProjectRiskChart();
   loadAuditProjectScoreCards();
+  loadGoogleSheetTable(); // ✅ Google Sheet verisini yükle
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 };
+
 
 
 
@@ -1575,12 +1604,12 @@ async function loadInvestigationScores() {
 
     const grouped = {};
     const auditorCountPerYear = {
-      "2020": 0.3,
-      "2021": 1.87,
-      "2022": 3.01,
-      "2023": 3.12,
-      "2024": 2.44,
-      "2025": 0.83
+      "2020": 2,
+      "2021": 7.25,
+      "2022": 15.83,
+      "2023": 15.17,
+      "2024": 9.08,
+      "2025": 2.62
     };
 
     data.forEach(item => {
@@ -1611,29 +1640,71 @@ async function loadInvestigationScores() {
     console.error("Failed to load investigation scores:", error);
   }
 }
+async function loadGoogleSheetTable() {
+  try {
+    const res = await fetch(`${backendURL}/api/google-sheet-data`);
+    const data = await res.json();
+
+    const rows = data.result;
+    if (!Array.isArray(rows) || rows.length === 0) return;
+
+    const container = document.getElementById("fraudImpactTableContainer");
+
+    let html = '<table class="compact-table"><thead><tr>';
+    rows[0].forEach(cell => {
+      html += `<th>${cell}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    for (let i = 1; i < rows.length; i++) {
+      html += '<tr>';
+      rows[i].forEach(cell => {
+        html += `<td>${cell || ''}</td>`;
+      });
+      html += '</tr>';
+    }
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  } catch (err) {
+    console.error("Failed to load Google Sheet data:", err);
+  }
+}
+
+
 
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/unique-audit-projects-by-year`);
+    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
     container.innerHTML = '';
 
     const auditorCountPerYear = {
-      "2020": 1.6,
-      "2021": 5.15,
-      "2022": 13.09,
-      "2023": 13.98,
-      "2024": 6.51,
-      "2025": 1.84
+      "2020": 2,
+      "2021": 7.25,
+      "2022": 15.83,
+      "2023": 15.17,
+      "2024": 9.08,
+      "2025": 2.62
     };
 
-    // Gelen veri zaten { year, count } formatında olacak
+    // Yıla göre filtrelenmiş audit count
+    const countsPerYear = {};
+
     data.forEach(item => {
       const year = item.year || 'Unknown';
-      const totalProjects = item.count;
+
+      if (!countsPerYear[year]) countsPerYear[year] = 0;
+      countsPerYear[year]++;
+    });
+
+    const years = Object.keys(countsPerYear).sort().reverse();
+
+    years.forEach(year => {
+      const totalProjects = countsPerYear[year];
       const auditors = auditorCountPerYear[year] || 1;
       const perAuditor = (totalProjects / auditors).toFixed(2);
 
@@ -1653,7 +1724,6 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
-
 
   </script>
 </body>
