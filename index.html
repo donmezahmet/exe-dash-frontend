@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Audit Findings Executive Dashboard</title>
+  <title>Audit Department Executive Summary</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <!-- Choices.js CSS -->
@@ -717,7 +717,7 @@ select[multiple] {
  <header>
   <div class="header-content">
     <img src="logo.png" alt="Logo" class="logo">
-    <span>Audit Findings Executive Dashboard</span>
+    <span>Audit Department Executive Summary</span>
   </div>
 </header>
 
@@ -1039,7 +1039,7 @@ function reloadBarChart() {
 }
 
 // Sayfa yüklendiğinde sadece dropdown'u yükle
-window.onload = () => {
+function initializeDashboard() {
   loadAuditTypes();
   reloadBarChart();
   reloadPieChart();
@@ -1051,10 +1051,10 @@ window.onload = () => {
   loadAuditNameStatusTable();
   loadProjectRiskChart();
   loadAuditProjectScoreCards();
-  loadGoogleSheetTable(); // ✅ Google Sheet verisini yükle
-   loadLossPreventionSummary();
+  loadGoogleSheetTable();
+  loadLossPreventionSummary();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
-};
+}
 
 
 
@@ -1926,30 +1926,38 @@ async function checkLogin() {
     const { username, password } = await response.json();
 
     if (usernameInput === username && passwordInput === password) {
-      // Login ekranını gizle
-      document.getElementById('loginSection').style.display = 'none';
+      console.log("✅ Giriş başarılı!");
 
-      // Dashboard ekranını göster
+      // login panelini gizle
+      const loginSection = document.getElementById('loginSection');
+      if (loginSection) loginSection.style.display = 'none';
+
+      // dashboard'u göster
       const dashboard = document.getElementById('dashboardContainer');
       if (dashboard) {
         dashboard.style.display = 'block';
+        dashboard.style.visibility = 'visible';
+        dashboard.style.opacity = 1;
+      } else {
+        console.error("❌ 'dashboardContainer' bulunamadı.");
       }
 
-      // Grafik ve diğer bileşenleri yükle
-      if (typeof loadCharts === 'function') loadCharts();
-      if (typeof loadLossPreventionSummary === 'function') loadLossPreventionSummary();
-      if (typeof loadOtherWidgets === 'function') loadOtherWidgets(); // varsa ek fonksiyonlar
+      // grafik yükleyici fonksiyonları çağır
+      if (typeof initializeDashboard === 'function') {
+        initializeDashboard(); // window.onload yerine
+      } else {
+        console.warn("⚠️ initializeDashboard fonksiyonu tanımlı değil.");
+      }
+
     } else {
       document.getElementById('loginError').innerText = 'Invalid username or password';
     }
+
   } catch (error) {
     console.error('Login Error:', error);
     document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
   }
 }
-
-
-
 
 
 
