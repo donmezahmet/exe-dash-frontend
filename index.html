@@ -709,6 +709,68 @@ select[multiple] {
   word-break: break-word;
   white-space: normal;
 }
+.login-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+    background-color: #5D3EBC; /* Arka plan tek renk */
+}
+
+.login-content {
+  background-color: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-logo {
+  width: 100px;
+  margin-bottom: 10px;
+}
+
+.login-content h2 {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.login-content input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.login-content button {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.login-content button:hover {
+  background-color: #e6b800;
+}
+
+.login-error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
 
 
   </style>
@@ -722,15 +784,17 @@ select[multiple] {
 </header>
 
 <!-- Login Section -->
-<div id="loginSection" class="card compact-table-card">
-  <h2>Please Login</h2>
-  <div>
+<div id="loginSection" class="login-card">
+  <div class="login-content">
+    <img src="logo.png" alt="Getir Logo" class="login-logo">
+    <h2>Audit Department Executive Dashboard</h2>
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Password" />
     <button onclick="checkLogin()">Login</button>
-    <p id="loginError" style="color:red;"></p>
+    <p id="loginError" class="login-error"></p>
   </div>
 </div>
+
 
 <div id="dashboardContainer" style="display: none;">
   <!-- Detay Kutusu -->
