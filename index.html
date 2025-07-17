@@ -732,7 +732,7 @@ select[multiple] {
   </div>
 </div>
 
-<div id="dashboardSection" style="display: none;">
+<div id="dashboardContainer" style="display: none;">
   <!-- Detay Kutusu -->
   <div id="detailBox">
     <button onclick="document.getElementById('detailBox').style.display='none'">Close</button>
@@ -1926,11 +1926,19 @@ async function checkLogin() {
     const { username, password } = await response.json();
 
     if (usernameInput === username && passwordInput === password) {
+      // Login ekranını gizle
       document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('dashboardSection').style.display = 'block';
 
-      // Şimdi grafik ve tabloları yükle
-      window.onload(); // mevcut grafik yükleme akışını tetikle
+      // Dashboard ekranını göster
+      const dashboard = document.getElementById('dashboardContainer');
+      if (dashboard) {
+        dashboard.style.display = 'block';
+      }
+
+      // Grafik ve diğer bileşenleri yükle
+      if (typeof loadCharts === 'function') loadCharts();
+      if (typeof loadLossPreventionSummary === 'function') loadLossPreventionSummary();
+      if (typeof loadOtherWidgets === 'function') loadOtherWidgets(); // varsa ek fonksiyonlar
     } else {
       document.getElementById('loginError').innerText = 'Invalid username or password';
     }
@@ -1939,6 +1947,8 @@ async function checkLogin() {
     document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
   }
 }
+
+
 
 
 
