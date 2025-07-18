@@ -770,6 +770,13 @@ select[multiple] {
   font-size: 0.9rem;
   margin-top: 10px;
 }
+.score-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
 
 
 
@@ -818,6 +825,15 @@ select[multiple] {
       <div class="score-card-container" id="investigationScoreCards"></div>
     </div>
   </div>
+
+  <div class="score-card-container" id="fraudAndLossScoreCards">
+  <div class="card">
+  <h2>Fraud Impact by Year</h2>
+  <div class="score-card-container" id="fraudImpactScoreCards"></div>
+</div>
+
+</div>
+
 
   <!-- ✅ Diğer her şey aşağıdan devam ediyor -->
   <div class="row">
@@ -1117,6 +1133,7 @@ function initializeDashboard() {
   loadAuditProjectScoreCards();
   loadGoogleSheetTable();
   loadLossPreventionSummary();
+  loadFraudImpactScoreCards();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 }
 
@@ -2022,6 +2039,63 @@ async function checkLogin() {
     document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
   }
 }
+
+async function loadFraudImpactScoreCards() {
+  try {
+    const res = await fetch(`${backendURL}/api/google-sheet-data`);
+    const data = await res.json();
+    const rows = data.result;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      console.warn("Fraud verisi bulunamadı.");
+      return;
+    }
+
+    // Satır uzunluğu yeterli mi kontrolü
+    if (!rows[132] || !rows[141]) {
+      console.error("⛔ Gerekli satırlar eksik. Satır uzunluğu:", rows.length);
+      return;
+    }
+
+    // Verileri çek
+    const years = rows[132].slice(2, 7);  // C133:G133
+    const totals = rows[141].slice(2, 7); // C142:G142
+
+    const auditorsPerYear = {
+      2021: 2.45,
+      2022: 6.03,
+      2023: 4.49,
+      2024: 1.73,
+      2025: 0.77
+    };
+
+    // HTML elementi
+    const container = document.getElementById("fraudImpactScoreCards");
+    container.innerHTML = ''; // varsa temizle
+
+    years.forEach((year, i) => {
+      const total = parseFloat(totals[i]?.toString().replace(/,/g, '')) || 0;
+      const auditorCount = auditorsPerYear[year] || 1;
+      const perAuditor = (total / auditorCount).toFixed(2);
+
+      const card = document.createElement('div');
+      card.className = 'score-card';
+
+      card.innerHTML = `
+        <div class="score-year">${year}</div>
+        <div class="score-total">${total.toLocaleString()}</div>
+        <div class="score-per-auditor">${perAuditor} per auditor</div>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error("❌ Failed to load Fraud Impact score cards:", err);
+  }
+}
+
+
 
 
 
