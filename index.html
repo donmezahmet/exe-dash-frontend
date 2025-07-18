@@ -66,17 +66,18 @@ header {
 }
 
 
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-      flex: 1 1 600px;
-      max-width: 650px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  flex: 0 1 600px; /* flex-grow: 0 olacak şekilde güncellendi */
+  max-width: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 
   .card-full {
   max-width: 100% !important;
@@ -360,6 +361,12 @@ select[multiple] {
   justify-content: flex-start;
 }
 
+.score-card-container2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: flex-start;
+}
 .score-card {
   background-color: #1c1f26;
   color: #ecf0f1;
@@ -806,6 +813,22 @@ select[multiple] {
   margin-top: 6px;
 }
 
+.scorecard-row {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+
+
+.score-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
 
 
 
@@ -831,6 +854,24 @@ select[multiple] {
   </div>
 </div>
 
+<!-- Enter ile giriş yapılmasını sağlayan script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginButton = document.querySelector('button[onclick="checkLogin()"]');
+
+    [usernameInput, passwordInput].forEach(input => {
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault(); // Sayfanın yeniden yüklenmesini engeller
+          loginButton.click();    // Login butonuna tıklamayı simüle eder
+        }
+      });
+    });
+  });
+</script>
+
 
 <div id="dashboardContainer" style="display: none;">
   <!-- Detay Kutusu -->
@@ -842,8 +883,8 @@ select[multiple] {
 
   <div class="container">
 
-  <!-- ✅ En Üstteki Scorecard'lar -->
-<div class="row top-scorecards">
+ <!-- ✅ En Üstteki Scorecard Satırı -->
+<div class="row scorecard-row">
   <div class="card">
     <h2>Audit Projects by Year</h2>
     <div class="score-card-container" id="auditProjectScoreCards"></div>
@@ -853,11 +894,22 @@ select[multiple] {
     <h2>Investigations by Year</h2>
     <div class="score-card-container" id="investigationScoreCards"></div>
   </div>
+</div>
 
- <div class="card">
+<!-- ✅ Alttaki Scorecard Satırı -->
+<div class="row scorecard-row">
+  <div class="card">
     <h2>Fraud Impact by Year</h2>
     <div class="score-card-container" id="investigationScoreCards2"></div>
   </div>
+
+  <div class="card">
+    <!-- placeholder veya gelecekteki kart -->
+    <h2>[Placeholder for Future Scorecard]</h2>
+    <div class="score-card-container"></div>
+  </div>
+</div>
+
 
 <!-- ✅ Diğer her şey aşağıdan devam ediyor -->
 
@@ -1854,7 +1906,7 @@ async function loadFraudImpactScoreCards() {
     const scoreCards = data.scoreCards;
     console.log("Fraud Impact API Response:", scoreCards);
 
-    const container = document.getElementById('investigationScoreCards2'); // 🔁 burası güncellendi
+    const container = document.getElementById('investigationScoreCards2');
     container.innerHTML = '';
 
     const auditorCountPerYear = {
@@ -1865,19 +1917,31 @@ async function loadFraudImpactScoreCards() {
       "2025": 0.77
     };
 
+    // Yıllara göre sırala (küçükten büyüğe)
+    scoreCards.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+
+
     scoreCards.forEach(item => {
       const year = item.year.toString();
-      const totalImpact = parseFloat(item.impact) || 0;
+
+      // Virgülleri kaldır ve sayıya çevir
+      const rawImpact = item.impact.replace(/,/g, '');
+      const totalImpact = parseFloat(rawImpact) || 0;
+
       const auditors = auditorCountPerYear[year] || 1;
-      const perAuditor = (totalImpact / auditors).toFixed(2);
+      const perAuditor = totalImpact / auditors;
+
+      // Kısa gösterim: milyon formatı
+      const formattedImpact = `€${(totalImpact / 1_000_000).toFixed(2)}M`;
+      const formattedPerAuditor = `€${(perAuditor / 1_000_000).toFixed(2)}M`;
 
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
         <h3>${year}</h3>
-        <div class="count">${totalImpact}</div>
-        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">💸 ${perAuditor} per auditor</p>
+        <div class="count">${formattedImpact}</div>
+        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${formattedPerAuditor} per auditor</p>
       `;
 
       container.appendChild(card);
@@ -1889,13 +1953,14 @@ async function loadFraudImpactScoreCards() {
 }
 
 
+
 async function loadInvestigationScores() {
   try {
     const res = await fetch(`${backendURL}/api/investigation-counts`);
     const data = await res.json();
     console.log("Investigation API Response:", data);
 
-    const container = document.getElementById('investigationScoreCards2');
+    const container = document.getElementById('investigationScoreCards');
     container.innerHTML = '';
 
     const grouped = {};
