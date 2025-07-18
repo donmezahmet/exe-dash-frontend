@@ -843,28 +843,24 @@ select[multiple] {
   <div class="container">
 
   <!-- ✅ En Üstteki Scorecard'lar -->
-  <div class="row top-scorecards">
-    <div class="card">
-      <h2>Audit Projects by Year</h2>
-      <div class="score-card-container" id="auditProjectScoreCards"></div>
-    </div>
-
-    <div class="card">
-      <h2>Investigations by Year</h2>
-      <div class="score-card-container" id="investigationScoreCards"></div>
-    </div>
+<div class="row top-scorecards">
+  <div class="card">
+    <h2>Audit Projects by Year</h2>
+    <div class="score-card-container" id="auditProjectScoreCards"></div>
   </div>
 
-  <div class="score-card-container" id="fraudAndLossScoreCards">
   <div class="card">
-  <h2>Fraud Impact by Year</h2>
-  <div class="score-card-container" id="fraudImpactScoreCards"></div>
-</div>
+    <h2>Investigations by Year</h2>
+    <div class="score-card-container" id="investigationScoreCards"></div>
+  </div>
 
-</div>
+ <div class="card">
+    <h2>Fraud Impact by Year</h2>
+    <div class="score-card-container" id="investigationScoreCards2"></div>
+  </div>
 
+<!-- ✅ Diğer her şey aşağıdan devam ediyor -->
 
-  <!-- ✅ Diğer her şey aşağıdan devam ediyor -->
   <div class="row">
 
     <div class="card">
@@ -1157,12 +1153,12 @@ function initializeDashboard() {
   loadAuditProgressChart();
   loadLeadActionAgeChart();
   loadInvestigationScores();
+  loadFraudImpactScoreCards();
   loadAuditNameStatusTable();
   loadProjectRiskChart();
   loadAuditProjectScoreCards();
   loadGoogleSheetTable();
   loadLossPreventionSummary();
-  loadFraudImpactScoreCards();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 }
 
@@ -1850,13 +1846,56 @@ async function loadAuditNameStatusTable() {
 
 
 
-async function loadInvestigationScores() {
+async function loadFraudImpactScoreCards() {
+  try {
+    const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`);
+    const data = await response.json();
+
+    const scoreCards = data.scoreCards;
+    console.log("Fraud Impact API Response:", scoreCards);
+
+    const container = document.getElementById('investigationScoreCards2'); // 🔁 burası güncellendi
+    container.innerHTML = '';
+
+    const auditorCountPerYear = {
+      "2021": 2.45,
+      "2022": 6.03,
+      "2023": 4.49,
+      "2024": 1.73,
+      "2025": 0.77
+    };
+
+    scoreCards.forEach(item => {
+      const year = item.year.toString();
+      const totalImpact = parseFloat(item.impact) || 0;
+      const auditors = auditorCountPerYear[year] || 1;
+      const perAuditor = (totalImpact / auditors).toFixed(2);
+
+      const card = document.createElement('div');
+      card.className = 'score-card';
+
+      card.innerHTML = `
+        <h3>${year}</h3>
+        <div class="count">${totalImpact}</div>
+        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">💸 ${perAuditor} per auditor</p>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Failed to load fraud impact score cards:", error);
+  }
+}
+
+
+async function loadInvestigationScores2() {
   try {
     const res = await fetch(`${backendURL}/api/investigation-counts`);
     const data = await res.json();
-    console.log("Investigation API Response:", data); // 👈 mutlaka ekle
+    console.log("Investigation API Response:", data);
 
-    const container = document.getElementById('investigationScoreCards');
+    const container = document.getElementById('investigationScoreCards2');
     container.innerHTML = '';
 
     const grouped = {};
@@ -1897,6 +1936,7 @@ async function loadInvestigationScores() {
     console.error("Failed to load investigation scores:", error);
   }
 }
+
 async function loadGoogleSheetTable() {
   try {
     const res = await fetch(`${backendURL}/api/google-sheet-data`);
@@ -2066,49 +2106,6 @@ async function checkLogin() {
   } catch (error) {
     console.error('Login Error:', error);
     document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
-  }
-}
-
-async function loadFraudImpactScoreCards() {
-  try {
-    const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`);
-    const data = await response.json();
-
-    const scoreCards = data.scoreCards;
-
-    if (!Array.isArray(scoreCards) || scoreCards.length === 0) {
-      throw new Error('Score card verisi boş veya hatalı.');
-    }
-
-    const auditorCounts = {
-      2021: 2.45,
-      2022: 6.03,
-      2023: 4.49,
-      2024: 1.73,
-      2025: 0.77
-    };
-
-    const container = document.getElementById('fraudImpactScoreCards');
-    container.innerHTML = ''; // eski kartları temizle
-
-    scoreCards.forEach(({ year, impact }) => {
-      const cleanImpact = parseFloat(impact.replace(/[^0-9.-]+/g, '')); // "1,365,641" → 1365641
-      const perAuditor = auditorCounts[year] ? (cleanImpact / auditorCounts[year]).toFixed(2) : '-';
-
-      const card = document.createElement('div');
-      card.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md text-center';
-
-      card.innerHTML = `
-        <h3 class="text-lg font-semibold text-gray-700 dark:text-white mb-2">${year}</h3>
-        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${impact}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">💸 ${perAuditor} per auditor</p>
-      `;
-
-      container.appendChild(card);
-    });
-
-  } catch (error) {
-    console.error('❌ Failed to load Fraud Impact score cards:', error);
   }
 }
 
