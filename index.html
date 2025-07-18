@@ -775,6 +775,35 @@ select[multiple] {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  margin-top: 20px;
+}
+
+.score-card {
+  background-color: #1c1c1c;
+  color: #fff;
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.score-year {
+  font-size: 24px;
+  font-weight: bold;
+  color: #3ea6ff;
+}
+
+.score-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #4ade80;
+}
+
+.score-sub {
+  font-size: 16px;
+  color: #ccc;
+  margin-top: 6px;
 }
 
 
@@ -2042,26 +2071,16 @@ async function checkLogin() {
 
 async function loadFraudImpactScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/google-sheet-data`);
-    const data = await res.json();
-    const rows = data.result;
+    const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`);
+    const data = await response.json();
 
-    if (!Array.isArray(rows) || rows.length === 0) {
-      console.warn("Fraud verisi bulunamadı.");
-      return;
+    const { years, totals } = data;
+
+    if (!Array.isArray(years) || !Array.isArray(totals) || years.length !== totals.length) {
+      throw new Error(`Gerekli satırlar eksik veya uyumsuz. year: ${years.length}, total: ${totals.length}`);
     }
 
-    // Satır uzunluğu yeterli mi kontrolü
-    if (!rows[132] || !rows[141]) {
-      console.error("⛔ Gerekli satırlar eksik. Satır uzunluğu:", rows.length);
-      return;
-    }
-
-    // Verileri çek
-    const years = rows[132].slice(2, 7);  // C133:G133
-    const totals = rows[141].slice(2, 7); // C142:G142
-
-    const auditorsPerYear = {
+    const auditorCounts = {
       2021: 2.45,
       2022: 6.03,
       2023: 4.49,
@@ -2069,32 +2088,30 @@ async function loadFraudImpactScoreCards() {
       2025: 0.77
     };
 
-    // HTML elementi
-    const container = document.getElementById("fraudImpactScoreCards");
-    container.innerHTML = ''; // varsa temizle
+    const container = document.getElementById('fraudImpactScoreCards');
+    container.innerHTML = ''; // önceki içeriği temizle
 
-    years.forEach((year, i) => {
-      const total = parseFloat(totals[i]?.toString().replace(/,/g, '')) || 0;
-      const auditorCount = auditorsPerYear[year] || 1;
-      const perAuditor = (total / auditorCount).toFixed(2);
+    years.forEach((year, index) => {
+      const yearStr = year.toString();
+      const totalImpact = parseFloat(totals[index]) || 0;
+      const perAuditor = auditorCounts[yearStr] ? (totalImpact / auditorCounts[yearStr]).toFixed(2) : '-';
 
       const card = document.createElement('div');
       card.className = 'score-card';
 
       card.innerHTML = `
-        <div class="score-year">${year}</div>
-        <div class="score-total">${total.toLocaleString()}</div>
-        <div class="score-per-auditor">${perAuditor} per auditor</div>
+        <div class="score-year">${yearStr}</div>
+        <div class="score-value green">${totalImpact}</div>
+        <div class="score-sub">💸 ${perAuditor} per auditor</div>
       `;
 
       container.appendChild(card);
     });
 
-  } catch (err) {
-    console.error("❌ Failed to load Fraud Impact score cards:", err);
+  } catch (error) {
+    console.error("❌ Failed to load Fraud Impact score cards:", error);
   }
 }
-
 
 
 
