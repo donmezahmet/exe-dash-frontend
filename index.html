@@ -1889,7 +1889,7 @@ async function loadFraudImpactScoreCards() {
 }
 
 
-async function loadInvestigationScores2() {
+async function loadInvestigationScores() {
   try {
     const res = await fetch(`${backendURL}/api/investigation-counts`);
     const data = await res.json();
