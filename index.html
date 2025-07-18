@@ -2074,10 +2074,10 @@ async function loadFraudImpactScoreCards() {
     const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`);
     const data = await response.json();
 
-    const { years, totals } = data;
+    const scoreCards = data.scoreCards;
 
-    if (!Array.isArray(years) || !Array.isArray(totals) || years.length !== totals.length) {
-      throw new Error(`Gerekli satırlar eksik veya uyumsuz. year: ${years.length}, total: ${totals.length}`);
+    if (!Array.isArray(scoreCards) || scoreCards.length === 0) {
+      throw new Error('Score card verisi boş veya hatalı.');
     }
 
     const auditorCounts = {
@@ -2089,29 +2089,29 @@ async function loadFraudImpactScoreCards() {
     };
 
     const container = document.getElementById('fraudImpactScoreCards');
-    container.innerHTML = ''; // önceki içeriği temizle
+    container.innerHTML = ''; // eski kartları temizle
 
-    years.forEach((year, index) => {
-      const yearStr = year.toString();
-      const totalImpact = parseFloat(totals[index]) || 0;
-      const perAuditor = auditorCounts[yearStr] ? (totalImpact / auditorCounts[yearStr]).toFixed(2) : '-';
+    scoreCards.forEach(({ year, impact }) => {
+      const cleanImpact = parseFloat(impact.replace(/[^0-9.-]+/g, '')); // "1,365,641" → 1365641
+      const perAuditor = auditorCounts[year] ? (cleanImpact / auditorCounts[year]).toFixed(2) : '-';
 
       const card = document.createElement('div');
-      card.className = 'score-card';
+      card.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md text-center';
 
       card.innerHTML = `
-        <div class="score-year">${yearStr}</div>
-        <div class="score-value green">${totalImpact}</div>
-        <div class="score-sub">💸 ${perAuditor} per auditor</div>
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-white mb-2">${year}</h3>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${impact}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">💸 ${perAuditor} per auditor</p>
       `;
 
       container.appendChild(card);
     });
 
   } catch (error) {
-    console.error("❌ Failed to load Fraud Impact score cards:", error);
+    console.error('❌ Failed to load Fraud Impact score cards:', error);
   }
 }
+
 
 
 
