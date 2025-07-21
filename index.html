@@ -528,9 +528,19 @@ select[multiple] {
   text-align: center;
 }
 
+#auditProgressWrapper {
+  width: 100%;
+  position: relative;
+  max-height: 550px;        /* Maksimum yüksekliği belirliyoruz */
+  overflow-y: auto;         /* Taşarsa scroll çıksın */
+  margin-top: 10px;
+  padding: 0;  
+  padding-right: 10px;      /* scroll bar boşluğu */
+}
+
 #auditProgressChart {
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important;
 }
 
 #auditProgressWrapper {
@@ -1624,18 +1634,22 @@ function loadAuditProgressChart() {
       const leadSelect = document.getElementById('auditLeadSelect');
       const yearSelect = document.getElementById('auditYearSelect');
 
-if (!auditProgressDropdownsInitialized) {
-  leadSelect.innerHTML = '<option value="">All Leads</option>' +
-    sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+      if (!auditProgressDropdownsInitialized) {
+        leadSelect.innerHTML = '<option value="">All Leads</option>' +
+          sortedLeads.map(l => `<option value="${l}">${l}</option>`).join('');
+        yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+        leadSelect.value = selectedLead;
+        yearSelect.value = selectedYear;
+        auditProgressDropdownsInitialized = true;
+      }
 
-  // "All Years" seçeneği kaldırıldı:
-  yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+      // ✔️ Canvas yüksekliği dinamik ayarlanıyor
+      const chartCanvas = document.getElementById('auditProgressChart');
+      const chartWrapper = document.getElementById('auditProgressWrapper');
+      const chartHeight = filteredData.length * 40;
+      chartCanvas.height = chartHeight;
+  chartCanvas.height = filteredData.length * 40;
 
-  leadSelect.value = selectedLead;
-  yearSelect.value = selectedYear;
-
-  auditProgressDropdownsInitialized = true;
-}
 
       const allStages = ['Planned', 'Fieldwork', 'Pre Closing', 'Closing', 'Completed'];
       const greyColor = '#ecf0f1';
@@ -1649,17 +1663,9 @@ if (!auditProgressDropdownsInitialized) {
         stack: 'same',
         datalabels: {
           display: true,
-          formatter: function (value, context) {
-            return allStages[context.datasetIndex];
-          },
-          color: function (context) {
-            const bg = context.dataset.backgroundColor[context.dataIndex];
-            return bg === greyColor ? '#7f8c8d' : '#ffffff';
-          },
-          font: {
-            weight: 'normal',
-            size: 10
-          },
+          formatter: () => stage,
+          color: (ctx) => ctx.dataset.backgroundColor[ctx.dataIndex] === greyColor ? '#7f8c8d' : '#ffffff',
+          font: { weight: 'normal', size: 10 },
           anchor: 'center',
           align: 'center',
           clamp: true
@@ -1669,8 +1675,7 @@ if (!auditProgressDropdownsInitialized) {
         barThickness: 12
       }));
 
-      const ctx = document.getElementById('auditProgressChart').getContext('2d');
-
+      const ctx = chartCanvas.getContext('2d');
       if (auditProgressChartInstance) auditProgressChartInstance.destroy();
 
       auditProgressChartInstance = new Chart(ctx, {
@@ -1682,7 +1687,7 @@ if (!auditProgressDropdownsInitialized) {
         options: {
           indexAxis: 'y',
           responsive: true,
-          maintainAspectRatio: false, // ✅ Bu önemli
+          maintainAspectRatio: false, // 🔑 Canvas'ın aspect ratio zorlamaması için
           plugins: {
             legend: { display: false }
           },
