@@ -2096,7 +2096,7 @@ async function loadGoogleSheetTable() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const res = await fetch(`${backendURL}/api/audit-projects-by-year`);
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
@@ -2111,14 +2111,12 @@ async function loadAuditProjectScoreCards() {
       "2025": 2.62
     };
 
-    // Yıla göre filtrelenmiş audit count
     const countsPerYear = {};
 
     data.forEach(item => {
-      const year = item.year || 'Unknown';
-
-      if (!countsPerYear[year]) countsPerYear[year] = 0;
-      countsPerYear[year]++;
+      const year = item.auditYear || 'Unknown';
+      const count = item.count || 0;
+      countsPerYear[year] = count;
     });
 
     const years = Object.keys(countsPerYear).sort().reverse();
@@ -2144,6 +2142,7 @@ async function loadAuditProjectScoreCards() {
     console.error("Failed to load audit project scorecards:", error);
   }
 }
+
 
 async function loadLossPreventionSummary() {
   try {
