@@ -917,7 +917,7 @@ select[multiple] {
   <div class="card">
     <!-- placeholder veya gelecekteki kart getir githuba al -->
     <h2>Loss Prevention Impact by Year</h2>
-    <div class="score-card-container"></div>
+    <div class="score-card-container" id="investigationScoreCards3"></div>
   </div>
 </div>
 
@@ -1958,6 +1958,59 @@ async function loadFraudImpactScoreCards() {
   }
 }
 
+async function loadLpImpactScoreCards() {
+  try {
+    const response = await fetch(`${backendURL}/api/lp-impact-score-cards`);
+    const data = await response.json();
+
+    const scoreCards = data.scoreCards;
+    console.log("Fraud Impact API Response:", scoreCards);
+
+    const container = document.getElementById('investigationScoreCards3');
+    container.innerHTML = '';
+
+    const auditorCountPerYear = {
+      "2021": 2.70,
+      "2022": 6.45,
+      "2023": 5.33,
+      "2024": 4.40,
+      "2025": 1.31
+    };
+
+    // Yıllara göre sırala (küçükten büyüğe)
+    scoreCards.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+
+
+    scoreCards.forEach(item => {
+      const year = item.year.toString();
+
+      // Virgülleri kaldır ve sayıya çevir
+      const rawImpact = item.impact.replace(/,/g, '');
+      const totalImpact = parseFloat(rawImpact) || 0;
+
+      const auditors = auditorCountPerYear[year] || 1;
+      const perAuditor = totalImpact / auditors;
+
+      // Kısa gösterim: milyon formatı
+      const formattedImpact = `€${(totalImpact / 1_000_000).toFixed(2)}M`;
+      const formattedPerAuditor = `€${(perAuditor / 1_000_000).toFixed(2)}M`;
+
+      const card = document.createElement('div');
+      card.className = 'score-card';
+
+      card.innerHTML = `
+        <h3>${year}</h3>
+        <div class="count">${formattedImpact}</div>
+        <p style="font-size:13px; margin-top: 4px; color:#bdc3c7;">${formattedPerAuditor} per auditor</p>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Failed to load loss prevention impact score cards:", error);
+  }
+}
 
 
 async function loadInvestigationScores() {
