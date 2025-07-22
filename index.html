@@ -2263,7 +2263,7 @@ async function checkLogin() {
 } 
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 document.getElementById("exportFindingActionsBtn").addEventListener("click", async () => {
   try {
     const response = await fetch(`${backendURL}/api/finding-actions`);
@@ -2308,7 +2308,7 @@ document.getElementById("exportFindingActionsBtn").addEventListener("click", asy
     alert("An error occurred while exporting.");
   }
 });
-
+</script>
 
 
   </script>
