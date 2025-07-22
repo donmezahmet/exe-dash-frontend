@@ -923,8 +923,8 @@ select[multiple] {
 
   <!-- export button -->
 
-  <div class="card" id="findingActionsSection">
-  <h3>Finding Actions</h3>
+  
+
 
   <!-- ⭐ Buton buraya -->
   <div id="findingActionsExportArea" style="margin-top: 10px; text-align: right;">
@@ -932,7 +932,7 @@ select[multiple] {
   </div>
 
   <!-- Altına chart veya tablo geliyor olabilir -->
-</div>
+
 
 
 <!-- ✅ Alttaki Scorecard Satırı -->
@@ -2264,50 +2264,33 @@ async function checkLogin() {
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-document.getElementById("exportFindingActionsBtn").addEventListener("click", async () => {
+document.getElementById('exportFindingActions').addEventListener('click', async () => {
+  console.log("Export to Excel butonuna tıklandı."); // 🔍 Takip için
+
   try {
-    const response = await fetch(`${backendURL}/api/finding-actions`);
+    const response = await fetch(`${backendURL}/api/finding-actions-export`);
     const data = await response.json();
 
+    console.log("API'den gelen veri:", data); // 🔍 Veri geldi mi?
+
     if (!Array.isArray(data) || data.length === 0) {
-      alert("No data to export.");
+      alert("No data found for export.");
       return;
     }
 
-    // Excel için başlıkları ve satırları ayarla
-    const worksheetData = [
-      [
-        "Audit Name",
-        "Audit Year",
-        "Action Description",
-        "Due Date",
-        "Revised Due Date",
-        "Action Responsible",
-        "Action Responsible Email",
-        "Parent Key"
-      ],
-      ...data.map(item => [
-        item.auditName || '',
-        item.auditYear || '',
-        item.summary || '',
-        item.dueDate || '',
-        item.revisedDueDate || '',
-        item.actionResponsible || '',
-        item.actionResponsibleEmail || '',
-        item.parentKey || ''
-      ])
-    ];
-
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Finding Actions");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "FindingActions");
 
     XLSX.writeFile(workbook, "finding-actions.xlsx");
-  } catch (error) {
-    console.error("Excel export error:", error);
-    alert("An error occurred while exporting.");
+    console.log("Excel dosyası indiriliyor..."); // 🔍 Export süreci başladı
+
+  } catch (err) {
+    console.error("Excel export error:", err);
+    alert("An error occurred while exporting to Excel.");
   }
 });
+
 </script>
 
 
