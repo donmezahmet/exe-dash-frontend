@@ -1117,7 +1117,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(data);
+      // ADF (Atlassian Document Format) içeriğini düz metne çeviren fonksiyon
+      function extractTextFromADF(adf) {
+        if (!adf || typeof adf !== 'object') return '';
+        if (adf.type === 'text') return adf.text || '';
+        if (!Array.isArray(adf.content)) return '';
+        return adf.content.map(extractTextFromADF).join(' ');
+      }
+
+      // Veriyi dönüştür (ADF formatındaki alanları temizle)
+      const cleanedData = data.map(item => ({
+        ...item,
+        description: extractTextFromADF(item.description),
+        actionDescription: extractTextFromADF(item.actionDescription)
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(cleanedData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "FindingActions");
 
@@ -1131,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
   <script>
  const backendURL = 'https://exe-dash-backend.onrender.com';
 
