@@ -1110,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch(`${backendURL}/api/finding-actions-export`);
       const data = await response.json();
-      console.log("API'den gelen veri:", data); // ✅ Takip logu
+    
 
       if (!Array.isArray(data) || data.length === 0) {
         alert("No data found for export.");
