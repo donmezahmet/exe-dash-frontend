@@ -2260,33 +2260,54 @@ async function checkLogin() {
     console.error('Login Error:', error);
     document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
   }
-}
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-  document.getElementById('exportFindingActionsBtn').addEventListener('click', async () => {
-    try {
-      const response = await fetch('https://exe-dash-backend.onrender.com/api/finding-actions-export');
-      const data = await response.json();
-
-      if (!data || data.length === 0) {
-        alert('No data available to export.');
-        return;
-      }
-
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Finding Actions");
-
-      XLSX.writeFile(workbook, "finding_actions_export.xlsx");
-    } catch (error) {
-      console.error("Excel export failed:", error);
-      alert('Failed to export data.');
-    }
-  });
+} 
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+document.getElementById("exportFindingActionsBtn").addEventListener("click", async () => {
+  try {
+    const response = await fetch(`${backendURL}/api/finding-actions`);
+    const data = await response.json();
 
+    if (!Array.isArray(data) || data.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    // Excel için başlıkları ve satırları ayarla
+    const worksheetData = [
+      [
+        "Audit Name",
+        "Audit Year",
+        "Action Description",
+        "Due Date",
+        "Revised Due Date",
+        "Action Responsible",
+        "Action Responsible Email",
+        "Parent Key"
+      ],
+      ...data.map(item => [
+        item.auditName || '',
+        item.auditYear || '',
+        item.summary || '',
+        item.dueDate || '',
+        item.revisedDueDate || '',
+        item.actionResponsible || '',
+        item.actionResponsibleEmail || '',
+        item.parentKey || ''
+      ])
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Finding Actions");
+
+    XLSX.writeFile(workbook, "finding-actions.xlsx");
+  } catch (error) {
+    console.error("Excel export error:", error);
+    alert("An error occurred while exporting.");
+  }
+});
 
 
 
