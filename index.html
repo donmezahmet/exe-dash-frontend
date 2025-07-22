@@ -2263,35 +2263,46 @@ async function checkLogin() {
 } 
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-document.getElementById('exportFindingActions').addEventListener('click', async () => {
-  console.log("Export to Excel butonuna tıklandı."); // 🔍 Takip için
+<!-- 📦 1. XLSX kütüphanesini yükle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-  try {
-    const response = await fetch(`${backendURL}/api/finding-actions-export`);
-    const data = await response.json();
-
-    console.log("API'den gelen veri:", data); // 🔍 Veri geldi mi?
-
-    if (!Array.isArray(data) || data.length === 0) {
-      alert("No data found for export.");
-      return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "FindingActions");
-
-    XLSX.writeFile(workbook, "finding-actions.xlsx");
-    console.log("Excel dosyası indiriliyor..."); // 🔍 Export süreci başladı
-
-  } catch (err) {
-    console.error("Excel export error:", err);
-    alert("An error occurred while exporting to Excel.");
+<!-- 🧠 2. Kendi scriptini ayrı yaz -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const exportBtn = document.getElementById('exportFindingActions');
+  if (!exportBtn) {
+    console.error("Export butonu DOM'da bulunamadı.");
+    return;
   }
-});
 
+  exportBtn.addEventListener('click', async () => {
+    console.log("Export to Excel butonuna tıklandı."); // ✅ Takip logu
+
+    try {
+      const response = await fetch(`${backendURL}/api/finding-actions-export`);
+      const data = await response.json();
+      console.log("API'den gelen veri:", data); // ✅ Takip logu
+
+      if (!Array.isArray(data) || data.length === 0) {
+        alert("No data found for export.");
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "FindingActions");
+
+      XLSX.writeFile(workbook, "finding-actions.xlsx");
+      console.log("Excel dosyası indiriliyor...");
+
+    } catch (err) {
+      console.error("Excel export error:", err);
+      alert("An error occurred while exporting to Excel.");
+    }
+  });
+});
 </script>
+
 
 
   </script>
