@@ -854,6 +854,27 @@ select[multiple] {
   background-color: #27ae60;
 }
 
+#findingActionsExportArea {
+  position: absolute; /* Elementi sayfa akışından çıkarıp konumlandırır */
+  top: 100px;         /* Üstteki header (60px) ve container'ın padding'i (40px) için boşluk */
+  right: 40px;         /* Soldaki container'ın padding'i (40px) için boşluk */
+  z-index: 10;        /* Butonun diğer elementlerin üzerinde kalmasını sağlar */
+}
+
+#exportFindingActionsBtn.btn-export {
+  background-color: #FFD100;
+  color: #5D3EBC;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#exportFindingActionsBtn.btn-export:hover {
+  background-color: #f6c700;
+}
 
 
 
@@ -923,13 +944,10 @@ select[multiple] {
 
   <!-- export button -->
 
-  
 
-
-  <!-- ⭐ Buton buraya -->
-  <div id="findingActionsExportArea" style="margin-top: 10px; text-align: right;">
-    <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
-  </div>
+<div id="findingActionsExportArea">
+  <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
+</div>
 
   <!-- Altına chart veya tablo geliyor olabilir -->
 
