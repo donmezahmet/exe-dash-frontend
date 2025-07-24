@@ -318,7 +318,28 @@ select[multiple] {
   max-width: 300px;
 }
 
+/* Bu kural, başlığı sola, butonu sağa yaslar ve aynı satıra getirir */
+/* This rule aligns the title to the left and the button to the right */
+.card-header {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px; /* Adjusts space below the header */
+}
 
+/* This prevents the h2's default margin from breaking the alignment */
+.card-header h2 {
+    margin: 0;
+}
+
+/* This rule aligns the filter(s) to the right */
+.card-filters {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 15px; /* Adjusts space between filter and chart */
+}
 
 
 
@@ -854,14 +875,6 @@ select[multiple] {
   background-color: #27ae60;
 }
 
- .card-controls {
-        display: flex;
-        justify-content: flex-end; /* Öğeleri sağa yaslar */
-        align-items: center;       /* Dikeyde ortalar */
-        gap: 20px;                 /* Öğeler arasına boşluk koyar */
-        width: 100%;               /* Konteynerin tamamını kaplar */
-        margin-bottom: 15px;       /* Alttaki grafikle arasına boşluk koyar */
-    }
 
 
  #exportFindingActionsBtn.btn-export {
@@ -946,9 +959,7 @@ select[multiple] {
   <!-- export button -->
 
 
-<div id="findingActionsExportArea">
-  <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
-</div>
+
 
   <!-- Altına chart veya tablo geliyor olabilir -->
 
@@ -1049,18 +1060,23 @@ select[multiple] {
         <canvas id="auditProgressChart"></canvas>
       </div>
     </div>
+<div class="card">
+  <div class="card-header">
+    <h2>Finding Actions Aging</h2>
+    <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
+  </div>
 
-       <div class=“card”>
-          <h2>Finding Actions Aging</h2>
-          <div class=“card-controls”>
-            <div class=“filter-group”>
-              <label for=“auditLeadSelectAge”>Audit Lead:</label>
-              <select id=“auditLeadSelectAge” onchange=“loadLeadActionAgeChart()“></select>
-            </div>
-            <button id=“exportFindingActionsBtn” class=“btn-export”>Export to Excel</button>
-          </div>
-          <canvas id=“leadActionAgeChart”></canvas>
-        </div>
+  <div class="card-filters">
+    <div class="filter-group">
+      <label for="auditLeadSelectAge">Audit Lead:</label>
+      <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()">
+        <option value="">All Leads</option>
+      </select>
+    </div>
+  </div>
+  
+  <canvas id="leadActionAgeChart"></canvas>
+</div>
 
 
     <div class="card">
@@ -1816,13 +1832,14 @@ function loadAuditProgressChart() {
 
 
 let leadActionAgeChartInstance = null;
+// Not: leadAgeChartChoices değişkeni silindi.
 
 function loadLeadActionAgeChart() {
   const select = document.getElementById('auditLeadSelectAge');
-  const selectedLead = select.value;
+  const selectedLead = select ? select.value : '';
   console.log("SEÇİLEN LEAD:", selectedLead);
 
-  if (select.options.length <= 1) {
+  if (select && select.options.length <= 1) {
     fetch(`${backendURL}/api/finding-action-status-by-lead`)
       .then(res => res.json())
       .then(data => {
@@ -1835,13 +1852,13 @@ function loadLeadActionAgeChart() {
             option.textContent = lead;
             select.appendChild(option);
           });
+          // Choices.js başlatma kodu buradan kaldırıldı.
       });
   }
 
   const query = selectedLead ? `?lead=${encodeURIComponent(selectedLead)}` : '';
   const baseURL = `${backendURL}/api`;
 
-  // İki API çağrısı birden: open+overdue ve delayed
   const urls = [
     `${baseURL}/finding-action-age-summary${query}`,
     `${baseURL}/finding-action-age-summary-delayed${query}`
@@ -1853,17 +1870,11 @@ function loadLeadActionAgeChart() {
         '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
         '0–30', '30–90', '90–180', '180–360', '360–720', '720+'
       ];
-
       const backgroundColors = [
         '#95a5a6', '#7f8c8d', '#bdc3c7', '#ecf0f1', '#f39c12',
         '#27ae60', '#f1c40f', '#e67e22', '#d35400', '#c0392b', '#8e44ad'
       ];
-
-      // Her bucket için iki API'den gelen veriyi topla
-      const combinedValues = labels.map(label => 
-        (openData[label] || 0) + (delayedData[label] || 0)
-      );
-
+      const combinedValues = labels.map(label => (openData[label] || 0) + (delayedData[label] || 0));
       const config = {
         type: 'bar',
         data: {
@@ -1879,24 +1890,12 @@ function loadLeadActionAgeChart() {
           responsive: true,
           plugins: {
             legend: { display: false },
-            datalabels: {
-              display: false,
-              formatter: value => value,
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              anchor: 'end',
-              align: 'start',
-              clamp: true
-            }
+            datalabels: { display: false }
           },
           scales: {
             x: {
               stacked: true,
-              ticks: {
-                maxRotation: 90,
-                minRotation: 90,
-                align: 'center'
-              }
+              ticks: { maxRotation: 90, minRotation: 90, align: 'center' }
             },
             y: {
               stacked: true,
@@ -1906,7 +1905,6 @@ function loadLeadActionAgeChart() {
         },
         plugins: [ChartDataLabels]
       };
-
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
       leadActionAgeChartInstance = new Chart(
         document.getElementById('leadActionAgeChart').getContext('2d'),
@@ -1915,6 +1913,8 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading combined action age chart:', err));
 }
+
+
 async function loadProjectRiskChart() {
   try {
     const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
