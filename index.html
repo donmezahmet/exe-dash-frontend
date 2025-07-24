@@ -325,21 +325,14 @@ select[multiple] {
   justify-content: space-between; 
   align-items: center;
   width: 100%;
-  margin-bottom: 20px; /* Adjusts space below the header */
+  margin-bottom: 20px; /* ✅ FİLTREYİ AŞAĞI ALMAK İÇİN BU SATIRI EKLEYİN */
 }
-
-/* This prevents the h2's default margin from breaking the alignment */
+/* Başlığın kendi alt boşluğunu sıfırlayarak hizalamayı düzeltiyoruz */
 .card-header h2 {
-    margin: 0;
+    margin-bottom: 0;
 }
 
 /* This rule aligns the filter(s) to the right */
-.card-filters {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  margin-bottom: 15px; /* Adjusts space between filter and chart */
-}
 
 
 
@@ -1060,19 +1053,17 @@ select[multiple] {
         <canvas id="auditProgressChart"></canvas>
       </div>
     </div>
-<div class="card">
+  <div class="card">
   <div class="card-header">
     <h2>Finding Actions Aging</h2>
     <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
   </div>
 
-  <div class="card-filters">
-    <div class="filter-group">
-      <label for="auditLeadSelectAge">Audit Lead:</label>
-      <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()">
-        <option value="">All Leads</option>
-      </select>
-    </div>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+    <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Leads</option>
+    </select>
   </div>
   
   <canvas id="leadActionAgeChart"></canvas>
@@ -2129,12 +2120,12 @@ async function loadInvestigationScores() {
 
     const grouped = {};
     const auditorCountPerYear = {
-      "2020": 2,
-      "2021": 7.25,
-      "2022": 15.83,
-      "2023": 15.17,
-      "2024": 9.08,
-      "2025": 2.62
+      "2020": 0.30,
+      "2021": 1.87,
+      "2022": 3.01,
+      "2023": 3.12,
+      "2024": 2.44,
+      "2025": 0.83
     };
 
     data.forEach(item => {
@@ -2207,12 +2198,12 @@ async function loadAuditProjectScoreCards() {
     container.innerHTML = '';
 
     const auditorCountPerYear = {
-      "2020": 2,
-      "2021": 7.25,
-      "2022": 15.83,
-      "2023": 15.17,
-      "2024": 9.08,
-      "2025": 2.62
+      "2020": 1.60,
+      "2021": 5.15,
+      "2022": 13.09,
+      "2023": 13.98,
+      "2024": 6.51,
+      "2025": 1.85
     };
 
     const countsPerYear = {};
