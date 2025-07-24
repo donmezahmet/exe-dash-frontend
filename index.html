@@ -94,7 +94,7 @@ header {
 
     canvas {
       width: 100% !important;
-      max-height: 360px !important;
+
     }
 
     .dropdown-multiselect {
@@ -294,23 +294,13 @@ select[multiple] {
 }
 
 
-  .filter-row {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+.filter-row .filter-group {
+  flex-direction: row;
+  align-items: center;
 }
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.filter-group label {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 6px;
+.filter-row .filter-group label {
+  margin-bottom: 0;
+  margin-right: 8px;
 }
 
 .filter-group .choices {
@@ -558,7 +548,7 @@ select[multiple] {
 }
 
 #auditProgressWrapper {
-  max-height: 550px;
+  max-height: 360px;
   overflow-y: auto;
 }
 
@@ -885,6 +875,16 @@ select[multiple] {
     }
 
 
+.filter-row .filter-group {
+  flex-direction: row; /* Dikey olan hizalamayı YATAY yapar */
+  align-items: center;   /* Etiket ve filtreyi dikeyde ortalar */
+}
+
+/* Bu kural, yatay hizalamada etiketin altındaki gereksiz boşluğu kaldırır */
+.filter-row .filter-group label {
+  margin-bottom: 0;
+  margin-right: 8px; /* Etiket ile filtre arasına boşluk ekler */
+}
   </style>
 </head>
 <body>
@@ -978,40 +978,21 @@ select[multiple] {
 
   <div class="row">
 
-    <div class="card">
-      <h2>Audit Findings by Year and Status</h2>
-      <div class="filter-row">
-        <div class="filter-group">
-          <label for="auditTypeSelect">Audit Type:</label>
-          <select id="auditTypeSelect" multiple onchange="reloadBarChart()">
-            <option value="">All Types</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="auditCountrySelect">Country:</label>
-          <select id="auditCountrySelect" multiple onchange="reloadBarChart()">
-            <option value="">All Countries</option>
-          </select>
-        </div>
-      </div>
-      <canvas id="statusChart"></canvas>
+<!-- ✅ OLMASI GEREKEN DOĞRU BLOK -->
+<div class="card">
+  <h2>Audit Findings by Year and Status</h2>
+  <div class="filter-row">
+    <div class="filter-group">
+      <!-- 1. Etiket düzeltildi (for="auditTypeSelect") -->
+      <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
+      <!-- 2. ID düzeltildi (id="auditTypeSelect"), inline stiller korundu -->
+      <select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <!-- Bu kısım JavaScript tarafından doldurulacak -->
+      </select>
     </div>
-
-    <div class="card">
-      <h2>Audit Findings - Status Distribution</h2>
-      <div style="align-self: flex-end; margin-bottom: 10px;">
-        <label for="auditTypeSelectPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-        <select id="auditTypeSelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-          <option value="">All Types</option>
-        </select>
-        <label for="auditCountrySelectPie" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-        <select id="auditCountrySelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-          <option value="">All Countries</option>
-        </select>
-      </div>
-      <canvas id="statusPie"></canvas>
-      <div class="legend" id="statusLegend"></div>
-    </div>
+  </div>
+  <canvas id="statusChart"></canvas>
+</div>
 
     <div class="card" style="max-width: 1000px;">
       <h2>Finding Actions - Status Distribution</h2>
@@ -1172,116 +1153,74 @@ const statusColors = {};
 let colorIndex = 0;
 let barChartInstance = null;
 
+// ✅ OLMASI GEREKEN DOĞRU FONKSİYON
 function loadAuditTypes() {
   fetch(`${backendURL}/api/audit-types`)
     .then(res => res.json())
     .then(types => {
       const barSelect = document.getElementById('auditTypeSelect');
-      const pieSelect = document.getElementById('auditTypeSelectPie');
       const actionSelect = document.getElementById('auditTypeSelectActionPie');
 
-      barSelect.innerHTML = '<option value="">All Types</option>';
-      pieSelect.innerHTML = '<option value="">All Types</option>';
-      actionSelect.innerHTML = '<option value="">All Types</option>';
-
-      types.forEach(type => {
-        const option1 = document.createElement('option');
-        option1.value = type;
-        option1.textContent = type;
-        barSelect.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = type;
-        option2.textContent = type;
-        pieSelect.appendChild(option2);
-
-        const option3 = document.createElement('option');
-        option3.value = type;
-        option3.textContent = type;
-        actionSelect.appendChild(option3);
-      });
-
-      // ✅ Audit Type için Choices.js
-      const auditTypeSelectEl = document.getElementById('auditTypeSelect');
-      new Choices(auditTypeSelectEl, {
-        removeItemButton: true,
-        placeholder: true,
-        placeholderValue: 'Select Audit Types',
-        searchEnabled: true,
-        shouldSort: false
-      });
-
-      // 🔽 Ülkeleri çek
-      fetch(`${backendURL}/api/audit-countries`)
-        .then(res => res.json())
-        .then(countries => {
-          const barCountrySelect = document.getElementById('auditCountrySelect');
-          const pieCountrySelect = document.getElementById('auditCountrySelectPie');
-
-          barCountrySelect.innerHTML = '<option value="">All Countries</option>';
-          pieCountrySelect.innerHTML = '<option value="">All Countries</option>';
-
-          countries.forEach(country => {
-            const option1 = document.createElement('option');
-            option1.value = country;
-            option1.textContent = country;
-            barCountrySelect.appendChild(option1);
-
-            const option2 = document.createElement('option');
-            option2.value = country;
-            option2.textContent = country;
-            pieCountrySelect.appendChild(option2);
-          });
-
-          // ✅ Country için Choices.js (çoklu seçimli)
-          const auditCountrySelectEl = document.getElementById('auditCountrySelect');
-          new Choices(auditCountrySelectEl, {
-            removeItemButton: true,
-            placeholder: true,
-            placeholderValue: 'Select Countries',
-            searchEnabled: true,
-            shouldSort: false
-          });
-
-          // ✅ Grafikleri çiz
-          reloadBarChart();
-          reloadPieChart();
-          reloadActionPieChart();
+      if (barSelect) {
+        barSelect.innerHTML = '<option value="">All Types</option>';
+        types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          barSelect.appendChild(option);
         });
+      }
+      
+      if (actionSelect) {
+        actionSelect.innerHTML = '<option value="">All Types</option>';
+        types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          actionSelect.appendChild(option);
+        });
+      }
+      
+      // "new Choices" ile başlayan blok buradan silindiği için
+      // 'auditTypeSelect' filtresinin tasarımı artık değişmeyecek.
+
+      reloadBarChart();
+      reloadActionPieChart();
     });
 }
 
 function reloadBarChart() {
   const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
   const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
-  const selectedAuditCountry = document.getElementById('auditCountrySelect')?.value;
+  
+  // const selectedAuditCountry satırı silindi.
 
   const params = new URLSearchParams();
   selectedAuditTypes.forEach(type => params.append('auditTypes', type));
-  if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
+
+  // Country parametresi ekleyen "if" bloğu silindi.
 
   const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
   
+  // Fonksiyonun geri kalanı aynı...
   fetch(url)
     .then(res => res.json())
     .then(data => {
       const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
-      if (Object.keys(data).includes('Unknown')) years.push('Unknown');
-
+      if (Object.keys(data).includes('Unknown')) {
+        years.push('Unknown');
+      }
       const allStatusesSet = new Set();
       years.forEach(year => {
         Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
       });
-
       const allStatuses = Array.from(allStatusesSet);
-
       allStatuses.forEach(status => {
         const normalized = status.toUpperCase();
         if (!statusColors[status]) {
           statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
         }
       });
-
       const datasets = allStatuses.map(status => {
         const dataPoints = years.map(year => data[year][status] || 0);
         return {
@@ -1291,7 +1230,6 @@ function reloadBarChart() {
           borderRadius: 6
         };
       });
-
       const config = {
         type: 'bar',
         data: {
@@ -1311,8 +1249,9 @@ function reloadBarChart() {
         },
         plugins: [ChartDataLabels]
       };
-
-      if (barChartInstance) barChartInstance.destroy();
+      if (barChartInstance) {
+        barChartInstance.destroy();
+      }
       barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
     });
 }
@@ -1321,19 +1260,19 @@ function reloadBarChart() {
 function initializeDashboard() {
   loadAuditTypes();
   reloadBarChart();
-  reloadPieChart();
+  // reloadPieChart(); // SİLİNDİ
   reloadActionPieChart();
   loadLeadStatusChart();
   loadAuditProgressChart();
   loadLeadActionAgeChart();
   loadInvestigationScores();
   loadFraudImpactScoreCards();
+  loadLpImpactScoreCards();
   loadAuditNameStatusTable();
   loadProjectRiskChart();
   loadAuditProjectScoreCards();
   loadGoogleSheetTable();
   loadLossPreventionSummary();
-  loadLpImpactScoreCards();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 }
 
@@ -1342,78 +1281,7 @@ function initializeDashboard() {
 
 
 
-let pieChartInstance = null;
 
-function reloadPieChart() {
-  const selectedAuditType = document.getElementById('auditTypeSelectPie')?.value;
-  const selectedCountry = document.getElementById('auditCountrySelectPie')?.value;
-
-  let url = `${backendURL}/api/finding-status-distribution`;
-  const params = [];
-
-  if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
-  if (selectedCountry) params.push(`auditCountries=${encodeURIComponent(selectedCountry)}`);
-
-  if (params.length > 0) {
-    url += '?' + params.join('&');
-  }
-
-  const pieChartColors = {
-    'OPEN': '#3498db',
-    'COMPLETED': '#2ecc71',
-    'CLOSED': '#e67e22',
-    'RISK ACCEPTED': '#9b59b6'
-  };
-
-  fetch(url)
-    .then(res => res.json())
-    .then(statusData => {
-      const pieLabels = Object.keys(statusData);
-      const pieValues = pieLabels.map(k => statusData[k]);
-      const pieColors = pieLabels.map(k => pieChartColors[k.toUpperCase()] || '#bdc3c7');
-
-      if (pieChartInstance) pieChartInstance.destroy();
-
-      pieChartInstance = new Chart(document.getElementById('statusPie').getContext('2d'), {
-        type: 'pie',
-        data: {
-          labels: pieLabels,
-          datasets: [{
-            data: pieValues,
-            backgroundColor: pieColors,
-            borderColor: '#f5f7fa',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              formatter: (value, ctx) => {
-                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                return ((value / total) * 100).toFixed(1) + '%';
-              },
-              color: '#fff',
-              font: { weight: 'bold', size: 14 }
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
-
-      const total = pieValues.reduce((a, b) => a + b, 0);
-      const legendEl = document.getElementById('statusLegend');
-      legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
-      pieLabels.forEach((label, i) => {
-        legendEl.innerHTML += `
-          <div style="display:flex;align-items:center;margin-bottom:6px;">
-            <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
-            ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
-          </div>`;
-      });
-    });
-}
 
 function reloadActionPieChart() {
   const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
