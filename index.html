@@ -1215,66 +1215,66 @@ function toTitleCase(str) {
 
 
 function reloadBarChart() {
-  const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
-  const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
-  
-  const params = new URLSearchParams();
-  selectedAuditTypes.forEach(type => params.append('auditTypes', type));
+ const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
+ const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
 
-  const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
-  
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
-      if (Object.keys(data).includes('Unknown')) {
-        years.push('Unknown');
-      }
-      const allStatusesSet = new Set();
-      years.forEach(year => {
-        Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
-      });
-      const allStatuses = Array.from(allStatusesSet);
-      allStatuses.forEach(status => {
-        const normalized = status.toUpperCase();
-        if (!statusColors[status]) {
-          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-        }
-      });
+ const params = new URLSearchParams();
+ selectedAuditTypes.forEach(type => params.append('auditTypes', type));
+
+ const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
+
+ fetch(url)
+  .then(res => res.json())
+  .then(data => {
+   const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
+   if (Object.keys(data).includes('Unknown')) {
+    years.push('Unknown');
+   }
+   const allStatusesSet = new Set();
+   years.forEach(year => {
+    Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
+   });
+   const allStatuses = Array.from(allStatusesSet);
+   allStatuses.forEach(status => {
+    const normalized = status.toUpperCase();
+    if (!statusColors[status]) {
+     statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+    }
+   });
       // ✨ DEĞİŞİKLİK BURADA ✨
-      const datasets = allStatuses.map(status => {
-        const dataPoints = years.map(year => data[year][status] || 0);
-        return {
-          label: toTitleCase(status), // status'ü yeni fonksiyonumuzla formatlıyoruz
-          data: dataPoints,
-          backgroundColor: statusColors[status],
-          borderRadius: 6
-        };
-      });
-      const config = {
-        type: 'bar',
-        data: {
-          labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
-          datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            datalabels: { display: false }
-          },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true }
-          }
-        },
-        plugins: [ChartDataLabels]
-      };
-      if (barChartInstance) {
-        barChartInstance.destroy();
-      }
-      barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
-    });
+   const datasets = allStatuses.map(status => {
+    const dataPoints = years.map(year => data[year][status] || 0);
+    return {
+     label: toTitleCase(status), // status'ü yeni fonksiyonumuzla formatlıyoruz
+     data: dataPoints,
+     backgroundColor: statusColors[status],
+     borderRadius: 6
+    };
+   });
+   const config = {
+    type: 'bar',
+    data: {
+     labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
+     datasets
+    },
+    options: {
+     responsive: true,
+     plugins: {
+      legend: { position: 'top' },
+      datalabels: { display: false }
+     },
+     scales: {
+      x: { stacked: true },
+      y: { stacked: true, beginAtZero: true }
+     }
+    },
+    plugins: [ChartDataLabels]
+   };
+   if (barChartInstance) {
+    barChartInstance.destroy();
+   }
+   barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
+  });
 }
 
 // Sayfa yüklendiğinde sadece dropdown'u yükle
@@ -1372,57 +1372,57 @@ function reloadActionPieChart() {
 let leadStatusChartInstance = null;
 
 function loadLeadStatusChart() {
-  fetch(`${backendURL}/api/finding-action-status-by-lead`)
-    .then(res => res.json())
-    .then(data => {
-      const leads = Object.keys(data);
-      const statusesSet = new Set();
+  fetch(`${backendURL}/api/finding-action-status-by-lead`)
+    .then(res => res.json())
+    .then(data => {
+      const leads = Object.keys(data);
+      const statusesSet = new Set();
 
-      leads.forEach(lead => {
-        Object.keys(data[lead]).forEach(status => statusesSet.add(status));
-      });
+      leads.forEach(lead => {
+        Object.keys(data[lead]).forEach(status => statusesSet.add(status));
+      });
 
-      const statuses = Array.from(statusesSet);
-      statuses.forEach(status => {
-        if (!statusColors[status]) {
-          statusColors[status] = predefinedColors[status.toUpperCase()] || fallbackColors[colorIndex++ % fallbackColors.length];
-        }
-      });
+      const statuses = Array.from(statusesSet);
+      statuses.forEach(status => {
+        if (!statusColors[status]) {
+          statusColors[status] = predefinedColors[status.toUpperCase()] || fallbackColors[colorIndex++ % fallbackColors.length];
+        }
+      });
 
-      const datasets = statuses.map(status => {
-        return {
-          label: status,
-          data: leads.map(lead => data[lead][status] || 0),
-          backgroundColor: statusColors[status],
-          borderRadius: 6
-        };
-      });
+      // ✨ DEĞİŞİKLİK BURADA ✨
+      const datasets = statuses.map(status => {
+        return {
+          label: toTitleCase(status), // status'ü yeni fonksiyonumuzla formatlıyoruz
+          data: leads.map(lead => data[lead][status] || 0),
+          backgroundColor: statusColors[status],
+          borderRadius: 6
+        };
+      });
 
-      const config = {
-        type: 'bar',
-        data: {
-          labels: leads,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            datalabels: { display: false }
-          },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true }
-          }
-        },
-        plugins: [ChartDataLabels]
-      };
+      const config = {
+        type: 'bar',
+        data: {
+          labels: leads,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        },
+        plugins: [ChartDataLabels]
+      };
 
-      if (leadStatusChartInstance) leadStatusChartInstance.destroy();
-      leadStatusChartInstance = new Chart(document.getElementById('leadStatusChart').getContext('2d'), config);
-    });
+      if (leadStatusChartInstance) leadStatusChartInstance.destroy();
+      leadStatusChartInstance = new Chart(document.getElementById('leadStatusChart').getContext('2d'), config);
+    });
 }
-
 
   
 
