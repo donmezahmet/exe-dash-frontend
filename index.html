@@ -843,11 +843,12 @@ select[multiple] {
   gap: 20px;
   justify-content: center;
 }
+/* BU KURALI BULUP DEĞİŞTİRİN */
 .btn-export {
   background-color: #2ecc71;
   color: white;
-  padding: 8px 16px;
-  font-size: 14px;
+  padding: 6px 12px;      /* 8px 16px'dan küçültüldü */
+  font-size: 13px;        /* 14px'den küçültüldü */
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -860,16 +861,18 @@ select[multiple] {
 
 
 
- #exportFindingActionsBtn.btn-export {
-      background-color: #FFD100;
-      color: #5D3EBC;
-      border: none;
-      padding: 8px 16px;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+/* BU KURALI DA BULUP DEĞİŞTİRİN */
+#exportFindingActionsBtn.btn-export {
+    background-color: #FFD100;
+    color: #5D3EBC;
+    border: none;
+    padding: 6px 12px; /* 8px 16px'dan küçültüldü */
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
     #exportFindingActionsBtn.btn-export:hover {
       background-color: #f6c700;
     }
@@ -884,6 +887,20 @@ select[multiple] {
 .filter-row .filter-group label {
   margin-bottom: 0;
   margin-right: 8px; /* Etiket ile filtre arasına boşluk ekler */
+}
+
+
+/* Fraud Impact tablosundaki ilk sütun hariç tüm veri hücrelerini sağa yaslar */
+#fraudImpactTableContainer td:not(:first-child) {
+  text-align: right;
+}
+
+
+
+
+/* Loss Prevention tablosundaki ilk sütun hariç tüm veri hücrelerini sağa yaslar */
+#lossPreventionSummaryContainer td:not(:first-child) {
+  text-align: right;
 }
   </style>
 </head>
@@ -1071,7 +1088,7 @@ select[multiple] {
   <div id="fraudImpactTableContainer"></div>
   </div>
 <div class="card compact-table-card">
-  <h2>Loss Prevention - Summary</h2>
+  <h2>Loss Prevention Impact</h2>
   <div id="lossPreventionSummaryContainer"></div>
 </div>
 
@@ -1188,72 +1205,76 @@ function loadAuditTypes() {
       reloadActionPieChart();
     });
 }
+function toTitleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(function(word) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
+}
+
+
 
 function reloadBarChart() {
-  const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
-  const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
-  
-  // const selectedAuditCountry satırı silindi.
+  const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
+  const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
+  
+  const params = new URLSearchParams();
+  selectedAuditTypes.forEach(type => params.append('auditTypes', type));
 
-  const params = new URLSearchParams();
-  selectedAuditTypes.forEach(type => params.append('auditTypes', type));
-
-  // Country parametresi ekleyen "if" bloğu silindi.
-
-  const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
-  
-  // Fonksiyonun geri kalanı aynı...
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
-      if (Object.keys(data).includes('Unknown')) {
-        years.push('Unknown');
-      }
-      const allStatusesSet = new Set();
-      years.forEach(year => {
-        Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
-      });
-      const allStatuses = Array.from(allStatusesSet);
-      allStatuses.forEach(status => {
-        const normalized = status.toUpperCase();
-        if (!statusColors[status]) {
-          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
-        }
-      });
-      const datasets = allStatuses.map(status => {
-        const dataPoints = years.map(year => data[year][status] || 0);
-        return {
-          label: status,
-          data: dataPoints,
-          backgroundColor: statusColors[status],
-          borderRadius: 6
-        };
-      });
-      const config = {
-        type: 'bar',
-        data: {
-          labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
-          datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            datalabels: { display: false }
-          },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true }
-          }
-        },
-        plugins: [ChartDataLabels]
-      };
-      if (barChartInstance) {
-        barChartInstance.destroy();
-      }
-      barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
-    });
+  const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
+  
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
+      if (Object.keys(data).includes('Unknown')) {
+        years.push('Unknown');
+      }
+      const allStatusesSet = new Set();
+      years.forEach(year => {
+        Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
+      });
+      const allStatuses = Array.from(allStatusesSet);
+      allStatuses.forEach(status => {
+        const normalized = status.toUpperCase();
+        if (!statusColors[status]) {
+          statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
+        }
+      });
+      // ✨ DEĞİŞİKLİK BURADA ✨
+      const datasets = allStatuses.map(status => {
+        const dataPoints = years.map(year => data[year][status] || 0);
+        return {
+          label: toTitleCase(status), // status'ü yeni fonksiyonumuzla formatlıyoruz
+          data: dataPoints,
+          backgroundColor: statusColors[status],
+          borderRadius: 6
+        };
+      });
+      const config = {
+        type: 'bar',
+        data: {
+          labels: years.map(y => y === 'Unknown' ? 'Not Assigned' : y),
+          datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        },
+        plugins: [ChartDataLabels]
+      };
+      if (barChartInstance) {
+        barChartInstance.destroy();
+      }
+      barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
+    });
 }
 
 // Sayfa yüklendiğinde sadece dropdown'u yükle
@@ -1649,7 +1670,7 @@ function loadAuditProgressChart() {
           font: { weight: 'normal', size: 10 },
           anchor: 'center',
           align: 'center',
-          clamp: true
+          
         },
         borderRadius: 4,
         borderSkipped: false,
