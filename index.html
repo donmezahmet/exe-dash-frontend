@@ -94,7 +94,7 @@ header {
 
     canvas {
       width: 100% !important;
-      max-height: 360px !important;
+
     }
 
     .dropdown-multiselect {
@@ -294,23 +294,13 @@ select[multiple] {
 }
 
 
-  .filter-row {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+.filter-row .filter-group {
+  flex-direction: row;
+  align-items: center;
 }
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.filter-group label {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 6px;
+.filter-row .filter-group label {
+  margin-bottom: 0;
+  margin-right: 8px;
 }
 
 .filter-group .choices {
@@ -318,7 +308,21 @@ select[multiple] {
   max-width: 300px;
 }
 
+/* Bu kural, başlığı sola, butonu sağa yaslar ve aynı satıra getirir */
+/* This rule aligns the title to the left and the button to the right */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px; /* ✅ FİLTREYİ AŞAĞI ALMAK İÇİN BU SATIRI EKLEYİN */
+}
+/* Başlığın kendi alt boşluğunu sıfırlayarak hizalamayı düzeltiyoruz */
+.card-header h2 {
+    margin-bottom: 0;
+}
 
+/* This rule aligns the filter(s) to the right */
 
 
 
@@ -544,7 +548,7 @@ select[multiple] {
 }
 
 #auditProgressWrapper {
-  max-height: 550px;
+  max-height: 360px;
   overflow-y: auto;
 }
 
@@ -888,9 +892,48 @@ select[multiple] {
   gap: 20px;
   justify-content: center;
 }
+.btn-export {
+  background-color: #2ecc71;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-export:hover {
+  background-color: #27ae60;
+}
 
 
 
+ #exportFindingActionsBtn.btn-export {
+      background-color: #FFD100;
+      color: #5D3EBC;
+      border: none;
+      padding: 8px 16px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #exportFindingActionsBtn.btn-export:hover {
+      background-color: #f6c700;
+    }
+
+
+.filter-row .filter-group {
+  flex-direction: row; /* Dikey olan hizalamayı YATAY yapar */
+  align-items: center;   /* Etiket ve filtreyi dikeyde ortalar */
+}
+
+/* Bu kural, yatay hizalamada etiketin altındaki gereksiz boşluğu kaldırır */
+.filter-row .filter-group label {
+  margin-bottom: 0;
+  margin-right: 8px; /* Etiket ile filtre arasına boşluk ekler */
+}
   </style>
 </head>
 <body>
@@ -975,6 +1018,15 @@ select[multiple] {
   </div>
 </div>
 
+  <!-- export button -->
+
+
+
+
+  <!-- Altına chart veya tablo geliyor olabilir -->
+
+
+
 <!-- ✅ Alttaki Scorecard Satırı -->
 <div class="row scorecard-row">
   <div class="card">
@@ -995,40 +1047,21 @@ select[multiple] {
 
   <div class="row">
 
-    <div class="card">
-      <h2>Audit Findings by Year and Status</h2>
-      <div class="filter-row">
-        <div class="filter-group">
-          <label for="auditTypeSelect">Audit Type:</label>
-          <select id="auditTypeSelect" multiple onchange="reloadBarChart()">
-            <option value="">All Types</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="auditCountrySelect">Country:</label>
-          <select id="auditCountrySelect" multiple onchange="reloadBarChart()">
-            <option value="">All Countries</option>
-          </select>
-        </div>
-      </div>
-      <canvas id="statusChart"></canvas>
+<!-- ✅ OLMASI GEREKEN DOĞRU BLOK -->
+<div class="card">
+  <h2>Audit Findings by Year and Status</h2>
+  <div class="filter-row">
+    <div class="filter-group">
+      <!-- 1. Etiket düzeltildi (for="auditTypeSelect") -->
+      <label for="auditTypeSelect" style="font-size: 14px; font-weight: 500;">Filter:</label>
+      <!-- 2. ID düzeltildi (id="auditTypeSelect"), inline stiller korundu -->
+      <select id="auditTypeSelect" onchange="reloadBarChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+        <!-- Bu kısım JavaScript tarafından doldurulacak -->
+      </select>
     </div>
-
-    <div class="card">
-      <h2>Audit Findings - Status Distribution</h2>
-      <div style="align-self: flex-end; margin-bottom: 10px;">
-        <label for="auditTypeSelectPie" style="font-size: 14px; font-weight: 500;">Filter:</label>
-        <select id="auditTypeSelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-          <option value="">All Types</option>
-        </select>
-        <label for="auditCountrySelectPie" style="font-size: 14px; font-weight: 500; margin-left: 20px;">Country:</label>
-        <select id="auditCountrySelectPie" onchange="reloadPieChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-          <option value="">All Countries</option>
-        </select>
-      </div>
-      <canvas id="statusPie"></canvas>
-      <div class="legend" id="statusLegend"></div>
-    </div>
+  </div>
+  <canvas id="statusChart"></canvas>
+</div>
 
     <div class="card" style="max-width: 1000px;">
       <h2>Finding Actions - Status Distribution</h2>
@@ -1070,17 +1103,22 @@ select[multiple] {
         <canvas id="auditProgressChart"></canvas>
       </div>
     </div>
+  <div class="card">
+  <div class="card-header">
+    <h2>Finding Actions Aging</h2>
+    <button id="exportFindingActionsBtn" class="btn-export">Export to Excel</button>
+  </div>
 
-    <div class="card">
-      <h2>Finding Actions Aging</h2>
-      <div style="align-self: flex-end; margin-bottom: 10px;">
-        <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
-        <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-          <option value="">All Leads</option>
-        </select>
-      </div>
-      <canvas id="leadActionAgeChart"></canvas>
-    </div>
+  <div style="align-self: flex-end; margin-bottom: 10px;">
+    <label for="auditLeadSelectAge" style="font-size: 14px; font-weight: 500;">Audit Lead:</label>
+    <select id="auditLeadSelectAge" onchange="loadLeadActionAgeChart()" style="margin-left: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+      <option value="">All Leads</option>
+    </select>
+  </div>
+
+  <canvas id="leadActionAgeChart"></canvas>
+</div>
+
 
     <div class="card">
       <h2>Risk Level Distribution by Audit Project</h2>
@@ -1114,6 +1152,61 @@ select[multiple] {
 </div>
     <!-- Metin Görünümü Alt Kart -->
 
+<!-- 📦 1. XLSX kütüphanesini yükle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- 🧠 2. Kendi scriptini ayrı yaz -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const exportBtn = document.getElementById('exportFindingActionsBtn');
+  if (!exportBtn) {
+    console.error("Export butonu DOM'da bulunamadı.");
+    return;
+  }
+
+  exportBtn.addEventListener('click', async () => {
+    console.log("Export to Excel butonuna tıklandı."); // ✅ Takip logu
+
+    try {
+      const response = await fetch(`${backendURL}/api/finding-actions-export`, { credentials: 'include' });
+      const data = await response.json();
+
+
+      if (!Array.isArray(data) || data.length === 0) {
+        alert("No data found for export.");
+        return;
+      }
+
+      // ADF (Atlassian Document Format) içeriğini düz metne çeviren fonksiyon
+      function extractTextFromADF(adf) {
+        if (!adf || typeof adf !== 'object') return '';
+        if (adf.type === 'text') return adf.text || '';
+        if (!Array.isArray(adf.content)) return '';
+        return adf.content.map(extractTextFromADF).join(' ');
+      }
+
+      // Veriyi dönüştür (ADF formatındaki alanları temizle)
+      const cleanedData = data.map(item => ({
+        ...item,
+        description: extractTextFromADF(item.description),
+        actionDescription: extractTextFromADF(item.actionDescription)
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(cleanedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "FindingActions");
+
+      XLSX.writeFile(workbook, "finding-actions.xlsx");
+      console.log("Excel dosyası indiriliyor...");
+
+    } catch (err) {
+      console.error("Excel export error:", err);
+      alert("An error occurred while exporting to Excel.");
+    }
+  });
+});
+</script>
+
   <script>
  const backendURL = 'https://exe-dash-backend.onrender.com';
 
@@ -1129,116 +1222,74 @@ const statusColors = {};
 let colorIndex = 0;
 let barChartInstance = null;
 
+// ✅ OLMASI GEREKEN DOĞRU FONKSİYON
 function loadAuditTypes() {
   fetch(`${backendURL}/api/audit-types`, { credentials: 'include' })
     .then(res => res.json())
     .then(types => {
       const barSelect = document.getElementById('auditTypeSelect');
-      const pieSelect = document.getElementById('auditTypeSelectPie');
       const actionSelect = document.getElementById('auditTypeSelectActionPie');
 
-      barSelect.innerHTML = '<option value="">All Types</option>';
-      pieSelect.innerHTML = '<option value="">All Types</option>';
-      actionSelect.innerHTML = '<option value="">All Types</option>';
-
-      types.forEach(type => {
-        const option1 = document.createElement('option');
-        option1.value = type;
-        option1.textContent = type;
-        barSelect.appendChild(option1);
-
-        const option2 = document.createElement('option');
-        option2.value = type;
-        option2.textContent = type;
-        pieSelect.appendChild(option2);
-
-        const option3 = document.createElement('option');
-        option3.value = type;
-        option3.textContent = type;
-        actionSelect.appendChild(option3);
-      });
-
-      // ✅ Audit Type için Choices.js
-      const auditTypeSelectEl = document.getElementById('auditTypeSelect');
-      new Choices(auditTypeSelectEl, {
-        removeItemButton: true,
-        placeholder: true,
-        placeholderValue: 'Select Audit Types',
-        searchEnabled: true,
-        shouldSort: false
-      });
-
-      // 🔽 Ülkeleri çek
-      fetch(`${backendURL}/api/audit-countries`, { credentials: 'include' })
-        .then(res => res.json())
-        .then(countries => {
-          const barCountrySelect = document.getElementById('auditCountrySelect');
-          const pieCountrySelect = document.getElementById('auditCountrySelectPie');
-
-          barCountrySelect.innerHTML = '<option value="">All Countries</option>';
-          pieCountrySelect.innerHTML = '<option value="">All Countries</option>';
-
-          countries.forEach(country => {
-            const option1 = document.createElement('option');
-            option1.value = country;
-            option1.textContent = country;
-            barCountrySelect.appendChild(option1);
-
-            const option2 = document.createElement('option');
-            option2.value = country;
-            option2.textContent = country;
-            pieCountrySelect.appendChild(option2);
-          });
-
-          // ✅ Country için Choices.js (çoklu seçimli)
-          const auditCountrySelectEl = document.getElementById('auditCountrySelect');
-          new Choices(auditCountrySelectEl, {
-            removeItemButton: true,
-            placeholder: true,
-            placeholderValue: 'Select Countries',
-            searchEnabled: true,
-            shouldSort: false
-          });
-
-          // ✅ Grafikleri çiz
-          reloadBarChart();
-          reloadPieChart();
-          reloadActionPieChart();
+      if (barSelect) {
+        barSelect.innerHTML = '<option value="">All Types</option>';
+        types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          barSelect.appendChild(option);
         });
+      }
+
+      if (actionSelect) {
+        actionSelect.innerHTML = '<option value="">All Types</option>';
+        types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          actionSelect.appendChild(option);
+        });
+      }
+
+      // "new Choices" ile başlayan blok buradan silindiği için
+      // 'auditTypeSelect' filtresinin tasarımı artık değişmeyecek.
+
+      reloadBarChart();
+      reloadActionPieChart();
     });
 }
 
 function reloadBarChart() {
   const selectedAuditTypeOptions = Array.from(document.getElementById('auditTypeSelect')?.selectedOptions || []);
   const selectedAuditTypes = selectedAuditTypeOptions.map(opt => opt.value).filter(v => v !== "");
-  const selectedAuditCountry = document.getElementById('auditCountrySelect')?.value;
+
+  // const selectedAuditCountry satırı silindi.
 
   const params = new URLSearchParams();
   selectedAuditTypes.forEach(type => params.append('auditTypes', type));
-  if (selectedAuditCountry) params.append('auditCountries', selectedAuditCountry);
+
+  // Country parametresi ekleyen "if" bloğu silindi.
 
   const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
 
+  // Fonksiyonun geri kalanı aynı...
   fetch(url, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
-      if (Object.keys(data).includes('Unknown')) years.push('Unknown');
-
+      if (Object.keys(data).includes('Unknown')) {
+        years.push('Unknown');
+      }
       const allStatusesSet = new Set();
       years.forEach(year => {
         Object.keys(data[year]).forEach(status => allStatusesSet.add(status));
       });
-
       const allStatuses = Array.from(allStatusesSet);
-
       allStatuses.forEach(status => {
         const normalized = status.toUpperCase();
         if (!statusColors[status]) {
           statusColors[status] = predefinedColors[normalized] || fallbackColors[colorIndex++ % fallbackColors.length];
         }
       });
-
       const datasets = allStatuses.map(status => {
         const dataPoints = years.map(year => data[year][status] || 0);
         return {
@@ -1248,7 +1299,6 @@ function reloadBarChart() {
           borderRadius: 6
         };
       });
-
       const config = {
         type: 'bar',
         data: {
@@ -1268,8 +1318,9 @@ function reloadBarChart() {
         },
         plugins: [ChartDataLabels]
       };
-
-      if (barChartInstance) barChartInstance.destroy();
+      if (barChartInstance) {
+        barChartInstance.destroy();
+      }
       barChartInstance = new Chart(document.getElementById('statusChart').getContext('2d'), config);
     });
 }
@@ -1278,19 +1329,19 @@ function reloadBarChart() {
 function initializeDashboard() {
   loadAuditTypes();
   reloadBarChart();
-  reloadPieChart();
+  // reloadPieChart(); // SİLİNDİ
   reloadActionPieChart();
   loadLeadStatusChart();
   loadAuditProgressChart();
   loadLeadActionAgeChart();
   loadInvestigationScores();
   loadFraudImpactScoreCards();
+  loadLpImpactScoreCards();
   loadAuditNameStatusTable();
   loadProjectRiskChart();
   loadAuditProjectScoreCards();
   loadGoogleSheetTable();
   loadLossPreventionSummary();
-  loadLpImpactScoreCards();
   document.getElementById('auditLeadSelectAge').addEventListener('change', loadLeadActionAgeChart);
 }
 
@@ -1299,78 +1350,7 @@ function initializeDashboard() {
 
 
 
-let pieChartInstance = null;
 
-function reloadPieChart() {
-  const selectedAuditType = document.getElementById('auditTypeSelectPie')?.value;
-  const selectedCountry = document.getElementById('auditCountrySelectPie')?.value;
-
-  let url = `${backendURL}/api/finding-status-distribution`;
-  const params = [];
-
-  if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
-  if (selectedCountry) params.push(`auditCountries=${encodeURIComponent(selectedCountry)}`);
-
-  if (params.length > 0) {
-    url += '?' + params.join('&');
-  }
-
-  const pieChartColors = {
-    'OPEN': '#3498db',
-    'COMPLETED': '#2ecc71',
-    'CLOSED': '#e67e22',
-    'RISK ACCEPTED': '#9b59b6'
-  };
-
-  fetch(url, { credentials: 'include' })
-    .then(res => res.json())
-    .then(statusData => {
-      const pieLabels = Object.keys(statusData);
-      const pieValues = pieLabels.map(k => statusData[k]);
-      const pieColors = pieLabels.map(k => pieChartColors[k.toUpperCase()] || '#bdc3c7');
-
-      if (pieChartInstance) pieChartInstance.destroy();
-
-      pieChartInstance = new Chart(document.getElementById('statusPie').getContext('2d'), {
-        type: 'pie',
-        data: {
-          labels: pieLabels,
-          datasets: [{
-            data: pieValues,
-            backgroundColor: pieColors,
-            borderColor: '#f5f7fa',
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              formatter: (value, ctx) => {
-                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                return ((value / total) * 100).toFixed(1) + '%';
-              },
-              color: '#fff',
-              font: { weight: 'bold', size: 14 }
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
-
-      const total = pieValues.reduce((a, b) => a + b, 0);
-      const legendEl = document.getElementById('statusLegend');
-      legendEl.innerHTML = `<strong>Total Issues:</strong> ${total}<br><br>`;
-      pieLabels.forEach((label, i) => {
-        legendEl.innerHTML += `
-          <div style="display:flex;align-items:center;margin-bottom:6px;">
-            <div style="width:14px;height:14px;background:${pieColors[i]};margin-right:10px;border-radius:3px;"></div>
-            ${label}: <strong style="margin-left:5px;">${pieValues[i]}</strong>
-          </div>`;
-      });
-    });
-}
 
 function reloadActionPieChart() {
   const selectedAuditType = document.getElementById('auditTypeSelectActionPie')?.value;
@@ -1440,7 +1420,7 @@ function reloadActionPieChart() {
 let leadStatusChartInstance = null;
 
 function loadLeadStatusChart() {
-  fetch(`${backendURL}/api/finding-action-status-by-lead`)
+  fetch(`${backendURL}/api/finding-action-status-by-lead`, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const leads = Object.keys(data);
@@ -1777,13 +1757,14 @@ function loadAuditProgressChart() {
 
 
 let leadActionAgeChartInstance = null;
+// Not: leadAgeChartChoices değişkeni silindi.
 
 function loadLeadActionAgeChart() {
   const select = document.getElementById('auditLeadSelectAge');
-  const selectedLead = select.value;
+  const selectedLead = select ? select.value : '';
   console.log("SEÇİLEN LEAD:", selectedLead);
 
-  if (select.options.length <= 1) {
+  if (select && select.options.length <= 1) {
     fetch(`${backendURL}/api/finding-action-status-by-lead`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
@@ -1796,13 +1777,13 @@ function loadLeadActionAgeChart() {
             option.textContent = lead;
             select.appendChild(option);
           });
+          // Choices.js başlatma kodu buradan kaldırıldı.
       });
   }
 
   const query = selectedLead ? `?lead=${encodeURIComponent(selectedLead)}` : '';
   const baseURL = `${backendURL}/api`;
 
-  // İki API çağrısı birden: open+overdue ve delayed
   const urls = [
     `${baseURL}/finding-action-age-summary${query}`,
     `${baseURL}/finding-action-age-summary-delayed${query}`
@@ -1814,17 +1795,11 @@ function loadLeadActionAgeChart() {
         '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
         '0–30', '30–90', '90–180', '180–360', '360–720', '720+'
       ];
-
       const backgroundColors = [
         '#95a5a6', '#7f8c8d', '#bdc3c7', '#ecf0f1', '#f39c12',
         '#27ae60', '#f1c40f', '#e67e22', '#d35400', '#c0392b', '#8e44ad'
       ];
-
-      // Her bucket için iki API'den gelen veriyi topla
-      const combinedValues = labels.map(label =>
-        (openData[label] || 0) + (delayedData[label] || 0)
-      );
-
+      const combinedValues = labels.map(label => (openData[label] || 0) + (delayedData[label] || 0));
       const config = {
         type: 'bar',
         data: {
@@ -1840,24 +1815,12 @@ function loadLeadActionAgeChart() {
           responsive: true,
           plugins: {
             legend: { display: false },
-            datalabels: {
-              display: false,
-              formatter: value => value,
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              anchor: 'end',
-              align: 'start',
-              clamp: true
-            }
+            datalabels: { display: false }
           },
           scales: {
             x: {
               stacked: true,
-              ticks: {
-                maxRotation: 90,
-                minRotation: 90,
-                align: 'center'
-              }
+              ticks: { maxRotation: 90, minRotation: 90, align: 'center' }
             },
             y: {
               stacked: true,
@@ -1867,7 +1830,6 @@ function loadLeadActionAgeChart() {
         },
         plugins: [ChartDataLabels]
       };
-
       if (leadActionAgeChartInstance) leadActionAgeChartInstance.destroy();
       leadActionAgeChartInstance = new Chart(
         document.getElementById('leadActionAgeChart').getContext('2d'),
@@ -1876,6 +1838,8 @@ function loadLeadActionAgeChart() {
     })
     .catch(err => console.error('Error loading combined action age chart:', err));
 }
+
+
 async function loadProjectRiskChart() {
   try {
     const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`, { credentials: 'include' });
@@ -2090,12 +2054,12 @@ async function loadInvestigationScores() {
 
     const grouped = {};
     const auditorCountPerYear = {
-      "2020": 2,
-      "2021": 7.25,
-      "2022": 15.83,
-      "2023": 15.17,
-      "2024": 9.08,
-      "2025": 2.62
+      "2020": 0.30,
+      "2021": 1.87,
+      "2022": 3.01,
+      "2023": 3.12,
+      "2024": 2.44,
+      "2025": 0.83
     };
 
     data.forEach(item => {
@@ -2168,12 +2132,12 @@ async function loadAuditProjectScoreCards() {
     container.innerHTML = '';
 
     const auditorCountPerYear = {
-      "2020": 2,
-      "2021": 7.25,
-      "2022": 15.83,
-      "2023": 15.17,
-      "2024": 9.08,
-      "2025": 2.62
+      "2020": 1.60,
+      "2021": 5.15,
+      "2022": 13.09,
+      "2023": 13.98,
+      "2024": 6.51,
+      "2025": 1.85
     };
 
     const countsPerYear = {};
