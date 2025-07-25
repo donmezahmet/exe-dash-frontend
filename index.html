@@ -10,7 +10,7 @@
 <!-- Choices.js JS -->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <style>
-    
+
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -312,7 +312,7 @@ select[multiple] {
 /* This rule aligns the title to the left and the button to the right */
 .card-header {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   margin-bottom: 20px; /* ✅ FİLTREYİ AŞAĞI ALMAK İÇİN BU SATIRI EKLEYİN */
@@ -538,7 +538,7 @@ select[multiple] {
   max-height: 550px;        /* Maksimum yüksekliği belirliyoruz */
   overflow-y: auto;         /* Taşarsa scroll çıksın */
   margin-top: 10px;
-  padding: 0;  
+  padding: 0;
   padding-right: 10px;      /* scroll bar boşluğu */
 }
 
@@ -759,6 +759,55 @@ select[multiple] {
   color: #333;
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+.login-divider span {
+  padding: 0 15px;
+}
+
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #757575;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: box-shadow 0.2s;
+}
+
+.google-login-btn:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-decoration: none;
+  color: #757575;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+}
+
 .login-content input {
   display: block;
   width: 100%;
@@ -917,49 +966,69 @@ select[multiple] {
   <div class="login-content">
     <img src="logo.png" alt="Getir Logo" class="login-logo">
     <h2>Audit Department Executive Dashboard</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="checkLogin()">Login</button>
+
+    <!-- Google SSO Login Button -->
+    <a href="https://exe-dash-backend.onrender.com/api/auth/google" class="google-login-btn">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </a>
+
     <p id="loginError" class="login-error"></p>
   </div>
 </div>
 
-<!-- Enter ile giriş yapılmasını sağlayan script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const loginButton = document.querySelector('button[onclick="checkLogin()"]');
+    // Check if user is already authenticated on page load
+    checkAuthStatus();
 
-    [usernameInput, passwordInput].forEach(input => {
-      input.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault(); // Sayfanın yeniden yüklenmesini engeller
-          loginButton.click();    // Login butonuna tıklamayı simüle eder
-        }
-      });
-    });
+    // Check for OAuth callback parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'oauth_failed') {
+      document.getElementById('loginError').innerText = 'Google authentication failed. Please try again.';
+    }
   });
+
+  async function checkAuthStatus() {
+    try {
+      const response = await fetch('https://exe-dash-backend.onrender.com/api/auth/status', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+
+      if (data.authenticated) {
+        console.log("✅ User already authenticated:", data.user);
+        showDashboard();
+      }
+    } catch (error) {
+      console.log("User not authenticated, showing login form");
+    }
+  }
+
+  function showDashboard() {
+    // Hide login panel
+    const loginSection = document.getElementById('loginSection');
+    if (loginSection) loginSection.style.display = 'none';
+
+    // Show dashboard
+    const dashboard = document.getElementById('dashboardContainer');
+    if (dashboard) {
+      dashboard.style.display = 'block';
+      dashboard.style.visibility = 'visible';
+      dashboard.style.opacity = 1;
+    }
+
+    // Initialize dashboard
+    if (typeof initializeDashboard === 'function') {
+      initializeDashboard();
+    }
+  }
 </script>
-
-
-<div id="dashboardContainer" style="display: none;">
-  <!-- Detay Kutusu -->
-  <div id="detailBox">
-    <button onclick="document.getElementById('detailBox').style.display='none'">Close</button>
-    <h3 id="detailTitle"></h3>
-    <ul id="detailList"></ul>
-  </div>
-
-  <div class="container">
-
- <!-- ✅ En Üstteki Scorecard Satırı -->
-<div class="row scorecard-row">
-  <div class="card">
-    <h2>Audit Projects by Year</h2>
-    <div class="score-card-container" id="auditProjectScoreCards"></div>
-  </div>
-
   <div class="card">
     <h2>Investigations by Year</h2>
     <div class="score-card-container" id="investigationScoreCards"></div>
@@ -982,7 +1051,7 @@ select[multiple] {
     <div class="score-card-container" id="investigationScoreCards2"></div>
   </div>
 
-  
+
   <div class="card">
     <!-- placeholder veya gelecekteki kart getir githuba al -->
     <h2>Loss Prevention Impact by Year</h2>
@@ -1063,7 +1132,7 @@ select[multiple] {
       <option value="">All Leads</option>
     </select>
   </div>
-  
+
   <canvas id="leadActionAgeChart"></canvas>
 </div>
 
@@ -1097,9 +1166,9 @@ select[multiple] {
   </div> <!-- row -->
 </div> <!-- container -->
 
-</div> 
+</div>
     <!-- Metin Görünümü Alt Kart -->
-    
+
 <!-- 📦 1. XLSX kütüphanesini yükle -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -1116,9 +1185,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("Export to Excel butonuna tıklandı."); // ✅ Takip logu
 
     try {
-      const response = await fetch(`${backendURL}/api/finding-actions-export`);
+      const response = await fetch(`${backendURL}/api/finding-actions-export`, { credentials: 'include' });
       const data = await response.json();
-    
+
 
       if (!Array.isArray(data) || data.length === 0) {
         alert("No data found for export.");
@@ -1172,7 +1241,7 @@ let barChartInstance = null;
 
 // ✅ OLMASI GEREKEN DOĞRU FONKSİYON
 function loadAuditTypes() {
-  fetch(`${backendURL}/api/audit-types`)
+  fetch(`${backendURL}/api/audit-types`, { credentials: 'include' })
     .then(res => res.json())
     .then(types => {
       const barSelect = document.getElementById('auditTypeSelect');
@@ -1187,7 +1256,7 @@ function loadAuditTypes() {
           barSelect.appendChild(option);
         });
       }
-      
+
       if (actionSelect) {
         actionSelect.innerHTML = '<option value="">All Types</option>';
         types.forEach(type => {
@@ -1197,7 +1266,7 @@ function loadAuditTypes() {
           actionSelect.appendChild(option);
         });
       }
-      
+
       // "new Choices" ile başlayan blok buradan silindiği için
       // 'auditTypeSelect' filtresinin tasarımı artık değişmeyecek.
 
@@ -1223,7 +1292,7 @@ function reloadBarChart() {
 
  const url = `${backendURL}/api/finding-status-by-year?${params.toString()}`;
 
- fetch(url)
+ fetch(url, { credentials: 'include' })
   .then(res => res.json())
   .then(data => {
    const years = Object.keys(data).filter(y => y !== 'Unknown').sort();
@@ -1313,7 +1382,7 @@ function reloadActionPieChart() {
   if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
   if (params.length > 0) url += '?' + params.join('&');
 
-  fetch(url)
+  fetch(url, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const labels = Object.keys(data);
@@ -1372,7 +1441,7 @@ function reloadActionPieChart() {
 let leadStatusChartInstance = null;
 
 function loadLeadStatusChart() {
-  fetch(`${backendURL}/api/finding-action-status-by-lead`)
+  fetch(`${backendURL}/api/finding-action-status-by-lead`, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const leads = Object.keys(data);
@@ -1424,10 +1493,8 @@ function loadLeadStatusChart() {
     });
 }
 
-  
-
         // Two Dimensional Table
-        fetch(`${backendURL}/api/statistics-by-control-and-risk`)
+        fetch(`${backendURL}/api/statistics-by-control-and-risk`, { credentials: 'include' })
           .then(res => res.json())
           .then(data => {
             const container = document.getElementById('controlRiskTableContainer');
@@ -1455,9 +1522,9 @@ function loadLeadStatusChart() {
             html += '</tbody></table>';
             container.innerHTML = html;
           });
-  
 
-fetch(`${backendURL}/api/statistics-by-type-and-risk`)
+
+fetch(`${backendURL}/api/statistics-by-type-and-risk`, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const container = document.getElementById('typeRiskTableContainer');
@@ -1495,7 +1562,7 @@ fetch(`${backendURL}/api/statistics-by-type-and-risk`)
     ? `${backendURL}/api/finding-details-by-control-and-risk?control=${encodeURIComponent(control)}&risk=${encodeURIComponent(risk)}`
     : `${backendURL}/api/finding-details-by-type-and-risk?type=${encodeURIComponent(control)}&risk=${encodeURIComponent(risk)}`;
 
-  fetch(url)
+  fetch(url, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById('detailList');
@@ -1518,7 +1585,7 @@ fetch(`${backendURL}/api/statistics-by-type-and-risk`)
   document.getElementById('detailList').innerHTML = '<li>Loading...</li>';
   document.getElementById('detailBox').style.display = 'block';
 
-  fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${encodeURIComponent(status)}`)
+  fetch(`${backendURL}/api/finding-details?year=${encodeURIComponent(year)}&status=${encodeURIComponent(status)}`, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById('detailList');
@@ -1548,7 +1615,7 @@ function loadActionPieChart() {
   if (selectedAuditType) params.push(`auditTypes=${encodeURIComponent(selectedAuditType)}`);
   if (params.length > 0) url += '?' + params.join('&');
 
-  fetch(url)
+  fetch(url, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const labels = Object.keys(data);
@@ -1615,7 +1682,7 @@ function loadAuditProgressChart() {
     selectedYear = '2025';
   }
 
-  fetch(`${backendURL}/api/yearly-audit-plan`)
+  fetch(`${backendURL}/api/yearly-audit-plan`, { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       const leads = new Set();
@@ -1670,7 +1737,7 @@ function loadAuditProgressChart() {
           font: { weight: 'normal', size: 10 },
           anchor: 'center',
           align: 'center',
-          
+
         },
         borderRadius: 4,
         borderSkipped: false,
@@ -1720,7 +1787,7 @@ function loadLeadActionAgeChart() {
   console.log("SEÇİLEN LEAD:", selectedLead);
 
   if (select && select.options.length <= 1) {
-    fetch(`${backendURL}/api/finding-action-status-by-lead`)
+    fetch(`${backendURL}/api/finding-action-status-by-lead`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         const leads = Object.keys(data).sort();
@@ -1744,7 +1811,7 @@ function loadLeadActionAgeChart() {
     `${baseURL}/finding-action-age-summary-delayed${query}`
   ];
 
-  Promise.all(urls.map(url => fetch(url).then(res => res.json())))
+  Promise.all(urls.map(url => fetch(url, { credentials: 'include' }).then(res => res.json())))
     .then(([openData, delayedData]) => {
       const labels = [
         '-720–-360', '-360–-180', '-180–-90', '-90–-30', '-30–0',
@@ -1797,7 +1864,7 @@ function loadLeadActionAgeChart() {
 
 async function loadProjectRiskChart() {
   try {
-    const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`);
+    const response = await fetch(`${backendURL}/api/finding-risk-distribution-by-project`, { credentials: 'include' });
     const data = await response.json();
 
     const container = document.getElementById('projectRiskTableContainer');
@@ -1835,7 +1902,7 @@ async function loadProjectRiskChart() {
 
 async function loadAuditNameStatusTable() {
   try {
-    const response = await fetch(`${backendURL}/api/finding-actions-by-audit-name-and-status`);
+    const response = await fetch(`${backendURL}/api/finding-actions-by-audit-name-and-status`, { credentials: 'include' });
     const data = await response.json();
 
     const container = document.getElementById('auditNameStatusTableContainer');
@@ -1891,7 +1958,7 @@ async function loadAuditNameStatusTable() {
 
 async function loadFraudImpactScoreCards() {
   try {
-    const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`);
+    const response = await fetch(`${backendURL}/api/fraud-impact-score-cards`, { credentials: 'include' });
     const data = await response.json();
 
     const scoreCards = data.scoreCards;
@@ -1945,7 +2012,7 @@ async function loadFraudImpactScoreCards() {
 
 async function loadLpImpactScoreCards() {
   try {
-    const response = await fetch(`${backendURL}/api/lp-impact-score-cards`);
+    const response = await fetch(`${backendURL}/api/lp-impact-score-cards`, { credentials: 'include' });
     const data = await response.json();
 
     const scoreCards = data.scoreCards;
@@ -2000,7 +2067,7 @@ async function loadLpImpactScoreCards() {
 
 async function loadInvestigationScores() {
   try {
-    const res = await fetch(`${backendURL}/api/investigation-counts`);
+    const res = await fetch(`${backendURL}/api/investigation-counts`, { credentials: 'include' });
     const data = await res.json();
     console.log("Investigation API Response:", data);
 
@@ -2048,7 +2115,7 @@ async function loadInvestigationScores() {
 
 async function loadGoogleSheetTable() {
   try {
-    const res = await fetch(`${backendURL}/api/google-sheet-data`);
+    const res = await fetch(`${backendURL}/api/google-sheet-data`, { credentials: 'include' });
     const data = await res.json();
 
     const rows = data.result;
@@ -2080,7 +2147,7 @@ async function loadGoogleSheetTable() {
 
 async function loadAuditProjectScoreCards() {
   try {
-    const res = await fetch(`${backendURL}/api/audit-projects-by-year`);
+    const res = await fetch(`${backendURL}/api/audit-projects-by-year`, { credentials: 'include' });
     const data = await res.json();
 
     const container = document.getElementById('auditProjectScoreCards');
@@ -2130,7 +2197,7 @@ async function loadAuditProjectScoreCards() {
 
 async function loadLossPreventionSummary() {
   try {
-    const response = await fetch('https://exe-dash-backend.onrender.com/api/loss-prevention-summary');
+    const response = await fetch('https://exe-dash-backend.onrender.com/api/loss-prevention-summary' , { credentials: 'include' });
     const data = await response.json();
     const rows = data.result;
 
@@ -2175,50 +2242,6 @@ async function loadLossPreventionSummary() {
     document.getElementById('lossPreventionSummaryContainer').innerText = 'Failed to load data.';
   }
 }
-async function checkLogin() {
-  const usernameInput = document.getElementById('username').value.trim();
-  const passwordInput = document.getElementById('password').value.trim();
-
-  try {
-    const response = await fetch('https://exe-dash-backend.onrender.com/api/login-credentials');
-    const { username, password } = await response.json();
-
-    if (usernameInput === username && passwordInput === password) {
-      console.log("✅ Giriş başarılı!");
-
-      // login panelini gizle
-      const loginSection = document.getElementById('loginSection');
-      if (loginSection) loginSection.style.display = 'none';
-
-      // dashboard'u göster
-      const dashboard = document.getElementById('dashboardContainer');
-      if (dashboard) {
-        dashboard.style.display = 'block';
-        dashboard.style.visibility = 'visible';
-        dashboard.style.opacity = 1;
-      } else {
-        console.error("❌ 'dashboardContainer' bulunamadı.");
-      }
-
-      // grafik yükleyici fonksiyonları çağır
-      if (typeof initializeDashboard === 'function') {
-        initializeDashboard(); // window.onload yerine
-      } else {
-        console.warn("⚠️ initializeDashboard fonksiyonu tanımlı değil.");
-      }
-
-    } else {
-      document.getElementById('loginError').innerText = 'Invalid username or password';
-    }
-
-  } catch (error) {
-    console.error('Login Error:', error);
-    document.getElementById('loginError').innerText = 'Login failed. Please try again later.';
-  }
-} 
 </script>
-  </script>
-
-
 </body>
 </html>
