@@ -1355,6 +1355,7 @@ function initializeDashboard() {
   // reloadPieChart(); // SİLİNDİ
   reloadActionPieChart();
   loadLeadStatusChart();
+  loadTwoDimensionalTable();
   loadAuditProgressChart();
   loadLeadActionAgeChart();
   loadInvestigationScores();
@@ -1495,35 +1496,36 @@ function loadLeadStatusChart() {
     });
 }
 
-        // Two Dimensional Table
-        fetch(`${backendURL}/api/statistics-by-control-and-risk`, { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            const container = document.getElementById('controlRiskTableContainer');
-            const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
-            const headers = ['Internal Control Element', ...riskLevels, 'T:'];
-            let html = '<table><thead><tr>';
-            headers.forEach(h => html += `<th>${h}</th>`);
-            html += '</tr></thead><tbody>';
+function loadTwoDimensionalTable() {
+  // Two Dimensional Table
+  fetch(`${backendURL}/api/statistics-by-control-and-risk`, { credentials: 'include' })
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('controlRiskTableContainer');
+      const riskLevels = ['Critical', 'High', 'Medium', 'Low'];
+      const headers = ['Internal Control Element', ...riskLevels, 'T:'];
+      let html = '<table><thead><tr>';
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
 
-            data.forEach(row => {
-              html += '<tr>';
-              html += `<td>${row.control}</td>`;
-              riskLevels.forEach(level => {
-                const count = row[level] || 0;
-                if (count > 0 && row.control !== 'Total Unique Issues:') {
-                  html += `<td style="cursor:pointer;text-decoration:underline;" onclick="showDetails('${row.control}', '${level}')">${count}</td>`;
-                } else {
-                  html += `<td>${count}</td>`;
-                }
-              });
-              html += `<td>${row.Total}</td>`;
-              html += '</tr>';
-            });
+      data.forEach(row => {
+        html += '<tr>';
+        html += `<td>${row.control}</td>`;
+        riskLevels.forEach(level => {
+          const count = row[level] || 0;
+          if (count > 0 && row.control !== 'Total Unique Issues:') {
+            html += `<td style="cursor:pointer;text-decoration:underline;" onclick="showDetails('${row.control}', '${level}')">${count}</td>`;
+          } else {
+            html += `<td>${count}</td>`;
+          }
+        });
+        html += `<td>${row.Total}</td>`;
+        html += '</tr>';
+      });
 
-            html += '</tbody></table>';
-            container.innerHTML = html;
-          });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    });
 
 
 fetch(`${backendURL}/api/statistics-by-type-and-risk`, { credentials: 'include' })
@@ -1553,6 +1555,7 @@ fetch(`${backendURL}/api/statistics-by-type-and-risk`, { credentials: 'include' 
       html += '</tbody></table>';
       container.innerHTML = html;
     });
+}
 
   function showDetails(control, risk, mode = 'control') {
   const title = `${control} – ${risk} Risk Findings`;
